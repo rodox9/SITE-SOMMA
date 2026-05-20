@@ -1,0 +1,55 @@
+{
+  "cliente": "A.Gonçalves",
+  "dataAtualizacao": "2026-05-19",
+
+  "incorporadoras": [
+    "Porto Cama",
+    "A.Gonçalves Direta"
+  ],
+
+  "produtos": [
+    { "id": "MONTEZ",           "nome": "Montez",           "incorporadora": "A.Gonçalves Direta" },
+    { "id": "HAZ",              "nome": "Ház",              "incorporadora": "A.Gonçalves Direta" },
+    { "id": "ECCO",             "nome": "Ecco",             "incorporadora": "Porto Cama" },
+    { "id": "GARDEN_ECCO",      "nome": "Garden Ecco",      "incorporadora": "Porto Cama" },
+    { "id": "FARFALLE",         "nome": "Farfalle",         "incorporadora": "Porto Cama" },
+    { "id": "MERCI",            "nome": "Merci",            "incorporadora": "Porto Cama" },
+    { "id": "GARDENS",          "nome": "Gardens",          "incorporadora": "A.Gonçalves Direta" },
+    { "id": "ALTA_LANCAMENTO",  "nome": "Alta Lançamento",  "incorporadora": "A.Gonçalves Direta" },
+    { "id": "INSTITUCIONAL",    "nome": "Institucional",    "incorporadora": "A.Gonçalves Direta" }
+  ],
+
+  "CORES": {
+    "MONTEZ":          "#__SUBSTITUIR__",
+    "HAZ":             "#__SUBSTITUIR__",
+    "ECCO":            "#__SUBSTITUIR__",
+    "GARDEN_ECCO":     "#__SUBSTITUIR__",
+    "FARFALLE":        "#__SUBSTITUIR__",
+    "MERCI":           "#__SUBSTITUIR__",
+    "GARDENS":         "#__SUBSTITUIR__",
+    "ALTA_LANCAMENTO": "#__SUBSTITUIR__",
+    "INSTITUCIONAL":   "#__SUBSTITUIR__"
+  },
+
+  "objetivoCamp": {
+    "_comentario": "Substituir pelos valores aprovados no chat (objetivos por produto/campanha)"
+  },
+
+  "metaProdutoLead": {
+    "_comentario": "Substituir pelas metas de leads/CPL aprovadas"
+  },
+
+  "campanhas": [
+    { "produto": "MONTEZ",          "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 },
+    { "produto": "MONTEZ",          "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 },
+    { "produto": "MONTEZ",          "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 },
+    { "produto": "MONTEZ",          "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 },
+    { "produto": "HAZ",             "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 },
+    { "produto": "HAZ",             "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 },
+    { "produto": "HAZ",             "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 },
+    { "produto": "ECCO",            "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 },
+    { "produto": "GARDENS",         "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 },
+    { "produto": "ALTA_LANCAMENTO", "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 },
+    { "produto": "INSTITUCIONAL",   "nome": "exemplo — substituir", "status": "ativa",   "leads": 0, "spend": 0 }
+  ]
+}
