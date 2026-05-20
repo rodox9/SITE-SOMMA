@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Meta Ads — A.Gonçalves</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh;}
+.header{background:linear-gradient(135deg,#1a1f2e,#252b3b);padding:18px 32px;border-bottom:1px solid #2d3748;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.header h1{font-size:1.4rem;font-weight:700;color:#fff;}.header h1 span{color:#6366f1;}
+.client-badge{font-size:.72rem;color:#a5b4fc;background:#1e2535;padding:3px 11px;border-radius:20px;border:1px solid #6366f133;margin-top:3px;display:inline-block;}
+.live-badge{font-size:.65rem;color:#34d399;background:#064e3b;padding:3px 8px;border-radius:20px;border:1px solid #10b98133;display:inline-flex;align-items:center;gap:4px;}
+.live-dot{width:5px;height:5px;border-radius:50%;background:#10b981;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* MONTH SELECTOR */
+.month-bar{background:#13161f;border-bottom:1px solid #1e2535;padding:0 24px;display:flex;align-items:center;gap:0;max-width:1400px;margin:0 auto;overflow-x:auto;}
+.month-btn{padding:11px 20px;font-size:.8rem;font-weight:700;color:#475569;border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;letter-spacing:.03em;position:relative;}
+.month-btn:hover{color:#94a3b8;}
+.month-btn.active{color:#fff;border-bottom-color:#6366f1;}
+.month-btn .month-leads{font-size:.62rem;font-weight:400;color:#475569;display:block;margin-top:1px;}
+.month-btn.active .month-leads{color:#6366f1;}
+.month-btn .month-badge{position:absolute;top:7px;right:6px;font-size:.55rem;background:#6366f1;color:#fff;border-radius:5px;padding:1px 4px;}
+
+.tab-nav{background:#1a1f2e;border-bottom:1px solid #2d3748;display:flex;padding:0 24px;max-width:1400px;margin:0 auto;}
+.tab-btn{padding:13px 22px;font-size:.8rem;font-weight:700;color:#64748b;border:none;background:transparent;cursor:pointer;border-bottom:3px solid transparent;letter-spacing:.04em;text-transform:uppercase;transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.tab-btn:hover{color:#94a3b8;}.tab-btn.active{color:#fff;border-bottom-color:#6366f1;}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+.container{max-width:1400px;margin:0 auto;padding:20px 24px;}
+.section-title{font-size:.82rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin:22px 0 11px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:#2d3748;}.section-title:first-child{margin-top:0;}
+.filter-panel{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:13px 16px;margin-bottom:18px;}
+.filter-panel-title{font-size:.7rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px;}
+.filter-row{display:flex;flex-wrap:wrap;gap:9px;align-items:flex-end;}
+.filter-group{display:flex;flex-direction:column;gap:3px;}
+.filter-group label{font-size:.65rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;}
+.filter-select{background:#0f1117;border:1px solid #2d3748;color:#e2e8f0;padding:5px 9px;border-radius:8px;font-size:.76rem;cursor:pointer;outline:none;}
+.filter-select:focus{border-color:#6366f1;}
+.filter-chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+.chip{padding:3px 9px;border-radius:20px;border:1.5px solid;font-size:.66rem;font-weight:600;cursor:pointer;background:transparent;transition:all .15s;color:#94a3b8;border-color:#2d3748;}
+.chip.active{color:#fff!important;}
+.chip-all{background:#6366f1!important;border-color:#6366f1!important;color:#fff!important;}
+.filter-btn-apply{padding:6px 16px;border-radius:8px;border:none;background:#6366f1;color:#fff;font-size:.76rem;font-weight:600;cursor:pointer;}
+.filter-btn-apply:hover{background:#4f52d9;}
+.filter-summary{font-size:.68rem;color:#6366f1;margin-top:6px;}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:18px;}
+.kpi{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:15px;position:relative;overflow:hidden;transition:border-color .2s;}
+.kpi:hover{border-color:#6366f1;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi.purple::before{background:linear-gradient(90deg,#6366f1,#8b5cf6);}
+.kpi.green::before{background:linear-gradient(90deg,#10b981,#34d399);}
+.kpi.blue::before{background:linear-gradient(90deg,#3b82f6,#60a5fa);}
+.kpi.orange::before{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.kpi.pink::before{background:linear-gradient(90deg,#ec4899,#f472b6);}
+.kpi .label{font-size:.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.kpi .value{font-size:1.55rem;font-weight:700;color:#fff;line-height:1;}
+.kpi .sub{font-size:.65rem;color:#64748b;margin-top:3px;}
+.kpi .icon{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:1.6rem;opacity:.1;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.grid-1{margin-bottom:14px;}
+.card{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:16px;}
+.card h3{font-size:.81rem;font-weight:600;color:#cbd5e1;margin-bottom:11px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.card canvas{max-height:240px;}
+.card-meta{font-size:.66rem;color:#475569;margin-bottom:8px;}
+.pill-tabs{display:flex;gap:4px;margin-left:auto;}
+.pill-tab{padding:3px 9px;border-radius:7px;border:1px solid #2d3748;background:transparent;color:#94a3b8;font-size:.66rem;cursor:pointer;transition:all .15s;}
+.pill-tab.active{background:#6366f1;border-color:#6366f1;color:#fff;}
+.obj-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:7px;font-size:.65rem;font-weight:700;margin-left:6px;}
+.obj-ahead{background:#064e3b;color:#34d399;}.obj-behind{background:#450a0a;color:#f87171;}.obj-ok{background:#1e3a5f;color:#60a5fa;}
+.rankings-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+.ranking-card{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:14px;}
+.ranking-card h4{font-size:.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:4px;}
+.ranking-list{display:flex;flex-direction:column;gap:7px;}
+.ranking-row{display:flex;align-items:center;gap:7px;}
+.ranking-pos{font-size:.7rem;font-weight:700;color:#64748b;width:16px;text-align:right;flex-shrink:0;}
+.ranking-pos.gold{color:#f59e0b;}.ranking-pos.silver{color:#94a3b8;}.ranking-pos.bronze{color:#b45309;}
+.ranking-bar-wrap{flex:1;min-width:0;}
+.ranking-label{font-size:.68rem;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ranking-track{height:4px;background:#2d3748;border-radius:2px;}
+.ranking-fill{height:100%;border-radius:2px;}
+.ranking-val{font-size:.7rem;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.alerts-layout{display:grid;grid-template-columns:1fr 300px;gap:14px;margin-bottom:6px;}
+.alert-groups{display:flex;flex-direction:column;gap:9px;}
+.alert-group{background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;overflow:hidden;}
+.alert-group-header{padding:8px 13px;display:flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #2d3748;}
+.alert-group-header.hdr-danger{background:#2d0a0a;color:#f87171;}.alert-group-header.hdr-warning{background:#2d1f05;color:#fbbf24;}.alert-group-header.hdr-success{background:#052d1a;color:#34d399;}.alert-group-header.hdr-info{background:#0b1e3d;color:#60a5fa;}
+.alert-group-body{display:flex;flex-direction:column;}
+.alert-item{padding:7px 13px;border-bottom:1px solid #1e2535;font-size:.71rem;line-height:1.4;display:flex;align-items:flex-start;gap:6px;}
+.alert-item:last-child{border-bottom:none;}
+.alert-item-icon{flex-shrink:0;font-size:.9rem;margin-top:1px;}.alert-item-text{flex:1;}
+.actions-panel{background:#1a1f2e;border:1px solid #6366f1;border-radius:12px;overflow:hidden;align-self:start;}
+.actions-panel-header{padding:9px 13px;background:linear-gradient(90deg,#6366f122,#8b5cf611);border-bottom:1px solid #6366f133;font-size:.7rem;font-weight:700;color:#a5b4fc;text-transform:uppercase;letter-spacing:.06em;}
+.action-item{padding:8px 13px;border-bottom:1px solid #1e2535;display:flex;align-items:flex-start;gap:8px;}
+.action-item:last-child{border-bottom:none;}
+.action-num{background:#6366f1;color:#fff;font-size:.6rem;font-weight:700;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.action-text{font-size:.7rem;line-height:1.4;color:#cbd5e1;}
+.action-tag{display:inline-block;padding:1px 5px;border-radius:5px;font-size:.58rem;font-weight:700;margin-top:2px;}
+.action-tag.urgente{background:#450a0a;color:#f87171;}.action-tag.monitorar{background:#2d1f05;color:#fbbf24;}.action-tag.escalar{background:#052d1a;color:#34d399;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.76rem;}
+thead tr{background:#252b3b;}
+th{padding:7px 11px;text-align:left;color:#94a3b8;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;cursor:pointer;user-select:none;}
+th:hover{color:#e2e8f0;}
+th .sort-icon{margin-left:3px;opacity:.4;}
+th.sorted .sort-icon{opacity:1;color:#6366f1;}
+td{padding:7px 11px;border-bottom:1px solid #1e2535;white-space:nowrap;}
+tr:hover td{background:#1e2535;}
+.badge{display:inline-block;padding:2px 7px;border-radius:9px;font-size:.63rem;font-weight:600;}
+.badge.ativa{background:#064e3b;color:#34d399;}.badge.inativa{background:#450a0a;color:#f87171;}
+.cpl-bar{display:flex;align-items:center;gap:5px;}
+.cpl-track{flex:1;height:4px;background:#2d3748;border-radius:3px;min-width:40px;}
+.cpl-fill{height:100%;border-radius:3px;}
+tfoot td{font-weight:700;color:#fff;background:#252b3b;border-top:2px solid #6366f1;}
+.group-bar-wrap{display:flex;flex-direction:column;gap:9px;}
+.group-bar-row{display:grid;grid-template-columns:140px 1fr 90px;align-items:center;gap:9px;}
+.group-bar-label{font-size:.7rem;font-weight:600;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.group-bar-track{height:20px;background:#2d3748;border-radius:6px;overflow:hidden;}
+.group-bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:7px;font-size:.66rem;font-weight:700;color:#fff;white-space:nowrap;}
+.group-bar-val{font-size:.7rem;font-weight:700;text-align:right;white-space:nowrap;}
+.group-bar-sub{font-size:.6rem;color:#64748b;text-align:right;}
+.obj-pill{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:9px;font-size:.63rem;font-weight:700;}
+.no-data{text-align:center;padding:20px;color:#475569;font-size:.78rem;}
+
+/* MONTH SUMMARY BAR */
+.month-summary{display:flex;gap:12px;background:#13161f;border:1px solid #1e2535;border-radius:12px;padding:10px 16px;margin-bottom:16px;flex-wrap:wrap;}
+.month-summary-item{display:flex;flex-direction:column;gap:2px;}
+.month-summary-item .ms-label{font-size:.6rem;color:#475569;text-transform:uppercase;letter-spacing:.05em;}
+.month-summary-item .ms-value{font-size:1rem;font-weight:700;color:#fff;}
+.month-summary-item .ms-sub{font-size:.6rem;color:#64748b;}
+.ms-divider{width:1px;background:#1e2535;align-self:stretch;}
+
+@media(max-width:1100px){.alerts-layout{grid-template-columns:1fr;}.grid-2,.rankings-grid{grid-template-columns:1fr;}}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr);}.tab-btn{padding:11px 13px;font-size:.73rem;}}
+@media(max-width:600px){.kpis{grid-template-columns:1fr;}.header{padding:13px 14px;}.container{padding:13px 12px;}.tab-btn span.tab-label{display:none;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📊 Dashboard <span>Meta Ads</span></h1>
+    <div style="display:flex;align-items:center;gap:7px;margin-top:4px;flex-wrap:wrap;">
+      <span class="client-badge">👤 A.Gonçalves · act_1508000353607805</span>
+      <span class="live-badge"><span class="live-dot"></span>Planilha Google Sheets · 04/05/2026</span>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+    <div style="font-size:.78rem;color:#94a3b8;background:#1e2535;padding:4px 12px;border-radius:20px;border:1px solid #2d3748;" id="header-period">📅 —</div>
+    <div style="font-size:.65rem;color:#475569;">Meta: 700 leads · R$10.000/mês</div>
+  </div>
+</div>
+
+<!-- MONTH SELECTOR -->
+<div style="background:#13161f;border-bottom:1px solid #1e2535;max-width:1400px;margin:0 auto;">
+  <div class="month-bar" id="month-bar"></div>
+</div>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('resumo')"><span>📊</span><span class="tab-label">Resumo Geral</span></button>
+  <button class="tab-btn" onclick="switchTab('financeiro')"><span>💰</span><span class="tab-label">Financeiro</span></button>
+  <button class="tab-btn" onclick="switchTab('resultados')"><span>🎯</span><span class="tab-label">Resultados</span></button>
+</nav>
+
+<!-- ABA 01 -->
+<div id="tab-resumo" class="tab-panel active">
+<div class="container">
+
+  <div class="month-summary" id="month-summary-bar"></div>
+
+  <div class="filter-panel">
+    <div class="filter-panel-title">🔧 Filtros — <span id="filter-month-label">Mês</span></div>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>Período — de</label>
+        <select class="filter-select" id="filter-date-from"></select>
+      </div>
+      <div class="filter-group">
+        <label>Período — até</label>
+        <select class="filter-select" id="filter-date-to"></select>
+      </div>
+      <div class="filter-group">
+        <label>Status</label>
+        <select class="filter-select" id="filter-status">
+          <option value="all">Todas</option>
+          <option value="ativa">Ativas</option>
+          <option value="inativa">Inativas</option>
+        </select>
+      </div>
+      <div class="filter-group" style="flex:1;min-width:180px;">
+        <label>Campanhas</label>
+        <div class="filter-chips" id="camp-chips"></div>
+      </div>
+      <button class="filter-btn-apply" onclick="applyFilters()">Aplicar</button>
+    </div>
+    <div class="filter-summary" id="filter-summary"></div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi purple"><div class="label">Total Investido</div><div class="value" id="kpi-invest">—</div><div class="sub" id="kpi-invest-sub">no período</div><div class="icon">💰</div></div>
+    <div class="kpi green"><div class="label">Total de Leads</div><div class="value" id="kpi-leads">—</div><div class="sub" id="kpi-leads-sub">no período</div><div class="icon">🎯</div></div>
+    <div class="kpi blue"><div class="label">CPL Geral</div><div class="value" id="kpi-cpl">—</div><div class="sub">custo por lead</div><div class="icon">📉</div></div>
+    <div class="kpi orange"><div class="label">Média Leads/Dia</div><div class="value" id="kpi-media">—</div><div class="sub">leads por dia</div><div class="icon">📅</div></div>
+    <div class="kpi pink"><div class="label">Ticket Diário</div><div class="value" id="kpi-ticket">—</div><div class="sub">investido/dia</div><div class="icon">🎫</div></div>
+  </div>
+
+  <div class="section-title">📈 Acumulado vs Objetivo</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>🎯 Leads Acumulados <span id="leads-acum-badge" class="obj-badge"></span>
+        <span class="pill-tabs" style="margin-left:auto;">
+          <button class="pill-tab active" id="tab-leads-real" onclick="toggleLeadsView('real')">Geral</button>
+          <button class="pill-tab" id="tab-leads-camp" onclick="toggleLeadsView('camp')">Por Campanha</button>
+        </span>
+      </h3>
+      <div class="card-meta" id="leads-acum-meta"></div>
+      <canvas id="chartLeadsAcum" style="max-height:240px;"></canvas>
+    </div>
+    <div class="card">
+      <h3>💰 Orçamento Acumulado <span id="invest-acum-badge" class="obj-badge"></span></h3>
+      <div class="card-meta" id="invest-acum-meta"></div>
+      <canvas id="chartInvestAcum" style="max-height:240px;"></canvas>
+    </div>
+  </div>
+
+  <div class="section-title">🥇 Rankings de Performance</div>
+  <div class="rankings-grid">
+    <div class="ranking-card"><h4>🎯 Mais Leads</h4><div class="ranking-list" id="rank-leads"></div></div>
+    <div class="ranking-card"><h4>💡 Melhor CPL</h4><div class="ranking-list" id="rank-cpl"></div></div>
+    <div class="ranking-card"><h4>📡 Menor CPM</h4><div class="ranking-list" id="rank-cpm"></div></div>
+  </div>
+
+  <div class="section-title">📋 Tabela Detalhada</div>
+  <div class="card" style="margin-bottom:22px;">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th onclick="sortTable('camp')" data-col="camp">Campanha <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('status')" data-col="status">Status <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('obj')" data-col="obj">Objetivo <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('invest')" data-col="invest">Investido <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('leads')" data-col="leads">Leads <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('meta')" data-col="meta">vs Meta <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('cpl')" data-col="cpl">CPL <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('cpm')" data-col="cpm">CPM <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('media')" data-col="media">Média/Dia <span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('cliques')" data-col="cliques">Cliques <span class="sort-icon">↕</span></th>
+        </tr></thead>
+        <tbody id="table-body"></tbody>
+        <tfoot><tr id="table-foot"></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-title">⚡ Alertas Executivos</div>
+  <div class="alerts-layout" style="margin-bottom:26px;">
+    <div class="alert-groups" id="alert-groups"></div>
+    <div class="actions-panel">
+      <div class="actions-panel-header">⚡ Ações Recomendadas</div>
+      <div id="actions-list"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ABA 02 -->
+<div id="tab-financeiro" class="tab-panel">
+<div class="container">
+  <div class="kpis" style="grid-template-columns:repeat(4,1fr);">
+    <div class="kpi purple"><div class="label">Total Investido</div><div class="value" id="fin-kpi-invest">—</div><div class="sub" id="fin-kpi-invest-sub">no período</div><div class="icon">💰</div></div>
+    <div class="kpi green"><div class="label">Orçamento Mensal</div><div class="value">R$ 10.000</div><div class="sub">meta mensal</div><div class="icon">🗓</div></div>
+    <div class="kpi orange"><div class="label">% Budget Usado</div><div class="value" id="fin-kpi-pct">—</div><div class="sub">proporcional</div><div class="icon">📊</div></div>
+    <div class="kpi blue"><div class="label">Ticket Médio/Dia</div><div class="value" id="fin-kpi-ticket">—</div><div class="sub">investimento diário</div><div class="icon">🎫</div></div>
+  </div>
+  <div class="section-title">📈 Orçamento Acumulado vs Meta</div>
+  <div class="card grid-1"><h3>💰 Investimento Acumulado vs Orçamento <span id="fin-invest-badge" class="obj-badge"></span></h3><div class="card-meta" id="fin-invest-meta"></div><canvas id="chartFinInvest" style="max-height:220px;"></canvas></div>
+  <div class="section-title">🏢 Orçamento por Incorporador</div>
+  <div class="card grid-1"><h3>💸 Investimento por Incorporador</h3><div id="fin-incorp-bars" class="group-bar-wrap" style="margin-top:4px;"></div></div>
+  <div class="section-title">🏠 Orçamento por Produto</div>
+  <div class="grid-2">
+    <div class="card"><h3>💸 Por Produto</h3><canvas id="chartFinProduto" style="max-height:260px;"></canvas></div>
+    <div class="card"><h3>📊 Distribuição %</h3><canvas id="chartFinProdutoPie" style="max-height:260px;"></canvas></div>
+  </div>
+  <div class="section-title">🎯 Por Objetivo</div>
+  <div class="card grid-1" style="margin-bottom:26px;"><h3>💸 Investimento por Objetivo</h3><canvas id="chartFinObjetivo" style="max-height:200px;"></canvas></div>
+</div>
+</div>
+
+<!-- ABA 03 -->
+<div id="tab-resultados" class="tab-panel">
+<div class="container">
+  <div class="kpis" style="grid-template-columns:repeat(4,1fr);">
+    <div class="kpi green"><div class="label">Total Leads</div><div class="value" id="res-kpi-leads">—</div><div class="sub" id="res-kpi-leads-sub">no período</div><div class="icon">🎯</div></div>
+    <div class="kpi purple"><div class="label">Meta Mínima / Ideal</div><div class="value">500<span style="font-size:.9rem;color:#64748b;"> / 700</span></div><div class="sub">leads mín. · ideal</div><div class="icon">🏆</div></div>
+    <div class="kpi blue"><div class="label">% da Meta</div><div class="value" id="res-kpi-pct">—</div><div class="sub">proporcional</div><div class="icon">📊</div></div>
+    <div class="kpi orange"><div class="label">CPL Médio</div><div class="value" id="res-kpi-cpl">—</div><div class="sub">custo por lead</div><div class="icon">📉</div></div>
+  </div>
+  <div class="section-title">📈 Leads vs Objetivo</div>
+  <div class="card grid-1"><h3>🎯 Leads Acumulados vs Meta <span id="res-leads-badge" class="obj-badge"></span></h3><div class="card-meta" id="res-leads-meta"></div><canvas id="chartResLeads" style="max-height:220px;"></canvas></div>
+  <div class="section-title">🏢 Por Incorporador</div>
+  <div class="card grid-1"><h3>🏢 Leads por Incorporador</h3><div id="res-incorp-bars" class="group-bar-wrap" style="margin-top:4px;"></div></div>
+  <div class="section-title">🏠 Por Produto</div>
+  <div class="grid-2">
+    <div class="card"><h3>📦 Leads por Produto</h3><canvas id="chartResProduto" style="max-height:240px;"></canvas></div>
+    <div class="card"><h3>📊 Distribuição %</h3><canvas id="chartResProdutoPie" style="max-height:240px;"></canvas></div>
+  </div>
+  <div class="section-title">🎯 Por Objetivo</div>
+  <div class="grid-2" style="margin-bottom:26px;">
+    <div class="card"><h3>🎯 Leads por Objetivo</h3><canvas id="chartResObjetivo" style="max-height:240px;"></canvas></div>
+    <div class="card"><h3>📋 CPL por Objetivo</h3><div id="res-obj-detail" style="display:flex;flex-direction:column;gap:9px;margin-top:4px;"></div></div>
+  </div>
+</div>
+</div>
+
+<script>
+const MONTHS_DATA = {
+  '2026-01': {
+    label: 'Janeiro 2026',
+    short: 'Jan',
+    daysInMonth: 31,
+    DIAS_ALL: ['01/01', '02/01', '03/01', '04/01', '05/01', '06/01', '07/01', '08/01', '09/01', '10/01', '11/01', '12/01', '13/01', '14/01', '15/01', '16/01', '17/01', '18/01', '19/01', '20/01', '21/01', '22/01', '23/01', '24/01', '25/01', '26/01', '27/01', '28/01', '29/01', '30/01', '31/01'],
+    rawData: {
+      'HÁZ': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'NOVOS CORRETORES': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GT + AVANTTI': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'ECCO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GARDEN ECCO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'FARFALLE': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'MERCI': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'PERMUTA': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'MONTEZ': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'CARDS': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'SALAS COMERCIAIS': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'CASA CONSTANT': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'INCONF. LAGUNA': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GRAN SOLARE': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'TREBIANO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'ALTA LANÇAMENTO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'MIND7': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    },
+    investData: {
+      'HÁZ': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'NOVOS CORRETORES': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GT + AVANTTI': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'ECCO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GARDEN ECCO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'FARFALLE': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MERCI': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'PERMUTA': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MONTEZ': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'CARDS': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'SALAS COMERCIAIS': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'CASA CONSTANT': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'INCONF. LAGUNA': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GRAN SOLARE': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'TREBIANO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'ALTA LANÇAMENTO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MIND7': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    },
+    cliquesData: {
+      'HÁZ': 0,
+      'NOVOS CORRETORES': 0,
+      'GT + AVANTTI': 0,
+      'ECCO': 0,
+      'GARDEN ECCO': 0,
+      'FARFALLE': 0,
+      'MERCI': 0,
+      'PERMUTA': 0,
+      'MONTEZ': 0,
+      'CARDS': 0,
+      'SALAS COMERCIAIS': 0,
+      'CASA CONSTANT': 0,
+      'INCONF. LAGUNA': 0,
+      'GRAN SOLARE': 0,
+      'TREBIANO': 0,
+      'ALTA LANÇAMENTO': 0,
+      'MIND7': 0,
+    },
+    statusData: {
+      'HÁZ': 'inativa',
+      'NOVOS CORRETORES': 'inativa',
+      'GT + AVANTTI': 'inativa',
+      'ECCO': 'inativa',
+      'GARDEN ECCO': 'inativa',
+      'FARFALLE': 'inativa',
+      'MERCI': 'inativa',
+      'PERMUTA': 'inativa',
+      'MONTEZ': 'inativa',
+      'CARDS': 'inativa',
+      'SALAS COMERCIAIS': 'inativa',
+      'CASA CONSTANT': 'inativa',
+      'INCONF. LAGUNA': 'inativa',
+      'GRAN SOLARE': 'inativa',
+      'TREBIANO': 'inativa',
+      'ALTA LANÇAMENTO': 'inativa',
+      'MIND7': 'inativa',
+    },
+  },
+  '2026-02': {
+    label: 'Fevereiro 2026',
+    short: 'Fev',
+    daysInMonth: 28,
+    DIAS_ALL: ['01/02', '02/02', '03/02', '04/02', '05/02', '06/02', '07/02', '08/02', '09/02', '10/02', '11/02', '12/02', '13/02', '14/02', '15/02', '16/02', '17/02', '18/02', '19/02', '20/02', '21/02', '22/02', '23/02', '24/02', '25/02', '26/02', '27/02', '28/02'],
+    rawData: {
+      'HÁZ': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'NOVOS CORRETORES': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GT + AVANTTI': [0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 6, 2, 2, 4, 0, 7, 0, 0, 0, 0, 0, 4, 0, 0, 6, 4, 5, 2],
+      'ECCO': [0, 0, 0, 1, 3, 0, 3, 2, 3, 3, 2, 2, 2, 1, 2, 2, 1, 6, 1, 3, 3, 2, 1, 3, 0, 3, 1, 2],
+      'GARDEN ECCO': [0, 0, 0, 0, 0, 0, 0, 0, 4, 19, 21, 14, 24, 13, 17, 4, 18, 8, 1, 5, 4, 2, 0, 1, 1, 7, 3, 3],
+      'FARFALLE': [0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 2, 1, 0, 0, 0, 0, 0, 5, 0, 0, 1, 0, 0, 0, 0, 0, 1, 3],
+      'MERCI': [0, 0, 0, 4, 4, 3, 0, 2, 4, 0, 3, 1, 4, 4, 4, 3, 2, 4, 4, 6, 6, 6, 0, 0, 3, 3, 4, 3],
+      'PERMUTA': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'MONTEZ': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'CARDS': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'SALAS COMERCIAIS': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'CASA CONSTANT': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'INCONF. LAGUNA': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GRAN SOLARE': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 2, 2, 5, 6, 0, 1, 1, 1, 3, 1, 0, 2, 9],
+      'TREBIANO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 3, 7, 2, 3, 3, 0, 0, 1, 4, 3, 0],
+      'ALTA LANÇAMENTO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'MIND7': [0, 0, 2, 1, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    },
+    investData: {
+      'HÁZ': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'NOVOS CORRETORES': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GT + AVANTTI': [0.0, 0.0, 0.0, 0.0, 18.38, 23.94, 23.91, 37.73, 43.3, 63.75, 49.82, 34.02, 23.66, 26.29, 39.93, 33.7, 29.67, 26.8, 23.7, 29.33, 26.61, 36.44, 3.45, 10.67, 40.35, 43.53, 39.15, 36.41],
+      'ECCO': [0.0, 0.0, 0.0, 23.21, 27.17, 26.23, 22.97, 11.36, 33.13, 47.97, 45.04, 42.47, 40.08, 41.44, 50.14, 46.9, 45.17, 42.18, 43.14, 42.34, 45.12, 49.96, 5.55, 21.07, 48.56, 62.79, 63.46, 63.61],
+      'GARDEN ECCO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.06, 52.98, 37.05, 33.08, 44.75, 36.18, 39.45, 16.57, 41.33, 23.67, 53.24, 69.0, 50.1, 44.5, 2.47, 23.74, 42.29, 68.06, 57.95, 54.69],
+      'FARFALLE': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 40.89, 36.94, 38.28, 33.6, 42.25, 11.87, 0.01, 15.39, 52.41, 39.82, 41.71, 28.22, 28.0, 50.2, 25.5, 0.0, 11.26, 51.44, 52.5, 19.1],
+      'MERCI': [0.0, 0.0, 0.0, 48.46, 33.34, 24.95, 26.86, 38.72, 46.05, 41.89, 46.06, 45.1, 37.9, 42.47, 53.18, 43.63, 44.75, 49.15, 41.47, 40.15, 42.28, 55.92, 6.42, 20.65, 52.32, 57.01, 63.87, 58.23],
+      'PERMUTA': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MONTEZ': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'CARDS': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'SALAS COMERCIAIS': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'CASA CONSTANT': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'INCONF. LAGUNA': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GRAN SOLARE': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 19.59, 46.94, 15.25, 56.54, 45.71, 25.54, 26.59, 30.99, 25.72, 32.94, 37.26, 4.76, 17.6, 36.21, 51.73, 47.57, 49.41],
+      'TREBIANO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 121.64, 159.58, 64.12, 55.46, 61.56, 75.33, 5.81, 28.85, 67.38, 81.82, 87.78, 71.02],
+      'ALTA LANÇAMENTO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MIND7': [0.0, 8.96, 51.54, 59.36, 57.05, 53.77, 53.56, 23.68, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    },
+    cliquesData: {
+      'HÁZ': 0,
+      'NOVOS CORRETORES': 0,
+      'GT + AVANTTI': 11544,
+      'ECCO': 12918,
+      'GARDEN ECCO': 9321,
+      'FARFALLE': 6833,
+      'MERCI': 9066,
+      'PERMUTA': 0,
+      'MONTEZ': 0,
+      'CARDS': 0,
+      'SALAS COMERCIAIS': 0,
+      'CASA CONSTANT': 0,
+      'INCONF. LAGUNA': 0,
+      'GRAN SOLARE': 5654,
+      'TREBIANO': 4317,
+      'ALTA LANÇAMENTO': 0,
+      'MIND7': 1798,
+    },
+    statusData: {
+      'HÁZ': 'inativa',
+      'NOVOS CORRETORES': 'inativa',
+      'GT + AVANTTI': 'ativa',
+      'ECCO': 'ativa',
+      'GARDEN ECCO': 'ativa',
+      'FARFALLE': 'ativa',
+      'MERCI': 'ativa',
+      'PERMUTA': 'inativa',
+      'MONTEZ': 'inativa',
+      'CARDS': 'inativa',
+      'SALAS COMERCIAIS': 'inativa',
+      'CASA CONSTANT': 'inativa',
+      'INCONF. LAGUNA': 'inativa',
+      'GRAN SOLARE': 'ativa',
+      'TREBIANO': 'ativa',
+      'ALTA LANÇAMENTO': 'inativa',
+      'MIND7': 'ativa',
+    },
+  },
+  '2026-03': {
+    label: 'Março 2026',
+    short: 'Mar',
+    daysInMonth: 31,
+    DIAS_ALL: ['01/03', '02/03', '03/03', '04/03', '05/03', '06/03', '07/03', '08/03', '09/03', '10/03', '11/03', '12/03', '13/03', '14/03', '15/03', '16/03', '17/03', '18/03', '19/03', '20/03', '21/03', '22/03', '23/03', '24/03', '25/03', '26/03', '27/03', '28/03', '29/03', '30/03', '31/03'],
+    rawData: {
+      'HÁZ': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'NOVOS CORRETORES': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GT + AVANTTI': [6, 0, 7, 1, 2, 5, 3, 6, 2, 2, 0, 0, 1, 3, 1, 0, 1, 5, 13, 5, 3, 17, 5, 8, 8, 0, 3, 3, 9, 2, 1],
+      'ECCO': [1, 0, 1, 5, 2, 3, 0, 3, 6, 2, 0, 0, 1, 3, 3, 0, 2, 1, 2, 3, 3, 5, 5, 3, 1, 0, 3, 6, 5, 2, 1],
+      'GARDEN ECCO': [5, 4, 4, 2, 4, 4, 1, 0, 1, 3, 1, 0, 0, 3, 1, 5, 1, 1, 2, 1, 0, 5, 1, 3, 2, 0, 1, 3, 6, 4, 3],
+      'FARFALLE': [1, 6, 1, 2, 1, 2, 2, 4, 1, 1, 1, 0, 1, 1, 5, 2, 0, 5, 1, 5, 1, 2, 6, 3, 0, 0, 0, 11, 8, 0, 8],
+      'MERCI': [5, 4, 2, 3, 2, 3, 1, 8, 5, 2, 2, 0, 4, 5, 4, 3, 2, 1, 4, 2, 4, 2, 5, 5, 6, 0, 2, 10, 6, 7, 2],
+      'PERMUTA': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'MONTEZ': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'CARDS': [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 3, 5, 9, 6, 2, 2, 11, 3, 0, 6, 4, 3, 4, 0, 1, 1, 3, 3, 11],
+      'SALAS COMERCIAIS': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+      'CASA CONSTANT': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'INCONF. LAGUNA': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GRAN SOLARE': [6, 8, 4, 1, 1, 3, 6, 1, 3, 3, 2, 0, 1, 5, 8, 13, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 22, 6, 25, 19],
+      'TREBIANO': [0, 0, 1, 3, 1, 2, 2, 1, 0, 1, 0, 0, 1, 2, 1, 1, 1, 1, 1, 1, 4, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+      'ALTA LANÇAMENTO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'MIND7': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    },
+    investData: {
+      'HÁZ': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'NOVOS CORRETORES': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GT + AVANTTI': [37.88, 31.81, 34.0, 26.52, 27.18, 77.98, 78.05, 73.88, 58.61, 68.24, 25.11, 0.0, 91.88, 94.29, 79.98, 29.07, 85.81, 90.18, 93.51, 90.34, 86.35, 113.11, 96.81, 89.4, 88.68, 1.71, 55.1, 88.31, 49.74, 28.65, 29.68],
+      'ECCO': [54.26, 42.6, 40.23, 46.09, 44.27, 45.38, 42.16, 54.06, 42.66, 34.55, 11.23, 0.0, 47.45, 77.39, 51.37, 43.83, 46.2, 45.97, 42.63, 44.59, 40.34, 51.81, 45.53, 44.83, 40.53, 1.35, 51.48, 65.46, 52.07, 42.48, 44.9],
+      'GARDEN ECCO': [48.47, 47.97, 40.07, 40.82, 35.79, 40.02, 40.49, 46.09, 37.01, 43.33, 10.42, 0.0, 50.22, 72.98, 56.7, 41.52, 41.51, 39.65, 38.51, 39.45, 36.56, 48.08, 40.91, 42.28, 40.2, 0.78, 49.48, 60.74, 50.37, 41.56, 41.95],
+      'FARFALLE': [44.22, 23.95, 26.54, 29.08, 28.48, 30.44, 27.29, 36.4, 28.95, 27.48, 9.62, 0.0, 31.93, 51.74, 36.25, 27.47, 31.16, 32.05, 29.4, 28.25, 25.38, 34.17, 28.27, 32.07, 28.68, 0.98, 26.37, 45.52, 43.23, 25.82, 29.21],
+      'MERCI': [57.78, 43.92, 41.14, 44.7, 38.26, 46.67, 42.13, 53.56, 47.02, 48.74, 6.57, 0.0, 53.09, 76.75, 57.58, 47.17, 46.24, 44.91, 43.01, 39.1, 36.83, 50.14, 49.53, 46.07, 42.25, 0.27, 41.96, 67.99, 53.82, 45.63, 42.55],
+      'PERMUTA': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MONTEZ': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'CARDS': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 36.2, 13.76, 0.0, 42.36, 69.49, 57.09, 45.52, 40.56, 36.42, 33.8, 36.13, 30.48, 48.51, 41.4, 40.6, 40.12, 0.33, 33.44, 62.46, 51.99, 38.58, 38.86],
+      'SALAS COMERCIAIS': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 12.27, 23.52, 17.16, 0.06, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'CASA CONSTANT': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'INCONF. LAGUNA': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GRAN SOLARE': [48.83, 38.98, 39.99, 25.44, 21.49, 37.79, 32.21, 40.34, 35.84, 35.13, 7.08, 0.0, 35.36, 60.0, 45.29, 36.28, 35.84, 31.29, 13.29, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 30.19, 59.74, 47.07, 31.74, 35.05],
+      'TREBIANO': [65.3, 59.47, 54.86, 66.89, 64.08, 53.98, 54.95, 72.34, 52.81, 49.79, 11.7, 0.01, 67.64, 94.52, 62.56, 53.71, 71.87, 32.22, 71.9, 33.63, 59.11, 53.04, 22.85, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'ALTA LANÇAMENTO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MIND7': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    },
+    cliquesData: {
+      'HÁZ': 0,
+      'NOVOS CORRETORES': 0,
+      'GT + AVANTTI': 22737,
+      'ECCO': 10174,
+      'GARDEN ECCO': 12331,
+      'FARFALLE': 11636,
+      'MERCI': 9789,
+      'PERMUTA': 0,
+      'MONTEZ': 0,
+      'CARDS': 7633,
+      'SALAS COMERCIAIS': 1015,
+      'CASA CONSTANT': 0,
+      'INCONF. LAGUNA': 0,
+      'GRAN SOLARE': 11305,
+      'TREBIANO': 7407,
+      'ALTA LANÇAMENTO': 0,
+      'MIND7': 0,
+    },
+    statusData: {
+      'HÁZ': 'inativa',
+      'NOVOS CORRETORES': 'inativa',
+      'GT + AVANTTI': 'ativa',
+      'ECCO': 'ativa',
+      'GARDEN ECCO': 'ativa',
+      'FARFALLE': 'ativa',
+      'MERCI': 'ativa',
+      'PERMUTA': 'inativa',
+      'MONTEZ': 'inativa',
+      'CARDS': 'ativa',
+      'SALAS COMERCIAIS': 'ativa',
+      'CASA CONSTANT': 'inativa',
+      'INCONF. LAGUNA': 'inativa',
+      'GRAN SOLARE': 'ativa',
+      'TREBIANO': 'ativa',
+      'ALTA LANÇAMENTO': 'inativa',
+      'MIND7': 'inativa',
+    },
+  },
+  '2026-04': {
+    label: 'Abril 2026',
+    short: 'Abr',
+    daysInMonth: 30,
+    DIAS_ALL: ['01/04', '02/04', '03/04', '04/04', '05/04', '06/04', '07/04', '08/04', '09/04', '10/04', '11/04', '12/04', '13/04', '14/04', '15/04', '16/04', '17/04', '18/04', '19/04', '20/04', '21/04', '22/04', '23/04', '24/04', '25/04', '26/04', '27/04', '28/04', '29/04', '30/04'],
+    rawData: {
+      'HÁZ': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 1],
+      'NOVOS CORRETORES': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GT + AVANTTI': [2, 1, 1, 1, 2, 2, 2, 1, 2, 1, 1, 2, 1, 1, 2, 2, 2, 2, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'ECCO': [3, 3, 3, 3, 4, 2, 2, 2, 3, 3, 3, 4, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 0, 0],
+      'GARDEN ECCO': [2, 3, 2, 3, 3, 2, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 1, 2, 2, 1, 2, 2],
+      'FARFALLE': [2, 1, 2, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 3, 3, 3, 3, 2, 2, 0],
+      'MERCI': [3, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'PERMUTA': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 44],
+      'MONTEZ': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+      'CARDS': [2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 4],
+      'SALAS COMERCIAIS': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'CASA CONSTANT': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 3, 5, 2, 1, 1, 1, 1, 1, 2, 1, 1, 3, 6],
+      'INCONF. LAGUNA': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+      'GRAN SOLARE': [2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'TREBIANO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'ALTA LANÇAMENTO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17],
+      'MIND7': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    },
+    investData: {
+      'HÁZ': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 14.61, 26.22, 30.9, 25.65, 30.67, 33.9, 29.34, 30.9, 28.51],
+      'NOVOS CORRETORES': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.57, 14.89, 22.84, 19.63, 18.03, 18.32, 19.99],
+      'GT + AVANTTI': [31.12, 27.41, 27.99, 23.96, 35.52, 33.77, 29.6, 24.37, 32.43, 26.53, 27.78, 31.23, 12.47, 27.39, 38.52, 40.23, 30.36, 29.36, 47.26, 20.64, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'ECCO': [45.65, 45.38, 44.26, 40.24, 49.12, 33.14, 21.65, 30.11, 38.03, 37.44, 37.9, 54.42, 22.99, 44.31, 40.98, 39.4, 40.47, 37.43, 46.95, 36.89, 39.78, 39.85, 37.75, 39.66, 39.12, 46.82, 24.05, 0.0, 0.0, 0.0],
+      'GARDEN ECCO': [38.13, 43.57, 37.95, 40.45, 45.4, 25.52, 17.4, 20.89, 22.1, 23.7, 22.05, 27.78, 22.36, 23.36, 25.27, 22.47, 23.03, 23.57, 28.26, 25.78, 23.88, 21.85, 22.16, 24.64, 21.31, 28.33, 25.55, 21.55, 24.11, 23.46],
+      'FARFALLE': [29.3, 27.14, 29.68, 25.6, 31.49, 31.11, 30.5, 43.1, 46.58, 51.98, 47.59, 58.9, 47.74, 50.78, 53.33, 51.89, 51.96, 49.39, 63.79, 53.22, 49.18, 47.07, 46.1, 48.8, 52.53, 56.85, 54.49, 47.07, 39.12, 54.21],
+      'MERCI': [45.97, 38.46, 45.96, 42.37, 50.65, 43.97, 44.82, 26.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'PERMUTA': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MONTEZ': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 13.47, 37.29, 21.58, 30.98],
+      'CARDS': [39.61, 36.89, 38.65, 35.28, 46.98, 43.97, 28.38, 29.66, 27.87, 32.97, 20.94, 32.69, 26.72, 30.17, 32.23, 29.6, 17.83, 0.0, 0.0, 24.63, 42.69, 36.4, 35.38, 34.45, 33.32, 36.74, 29.42, 29.6, 32.11, 29.31],
+      'SALAS COMERCIAIS': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'CASA CONSTANT': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 64.68, 96.41, 76.61, 119.29, 51.04, 29.04, 26.33, 28.11, 27.53, 30.6, 33.88, 30.83, 27.58, 72.95, 55.87],
+      'INCONF. LAGUNA': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.86, 22.65, 24.37, 14.15, 20.65, 12.13, 29.12, 22.23, 23.77, 14.96, 4.07, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GRAN SOLARE': [30.57, 32.01, 35.15, 32.89, 43.11, 32.36, 31.99, 34.63, 32.68, 39.37, 30.64, 37.02, 36.81, 34.16, 33.3, 33.7, 31.05, 38.78, 40.97, 19.49, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'TREBIANO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'ALTA LANÇAMENTO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MIND7': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    },
+    cliquesData: {
+      'HÁZ': 3742,
+      'NOVOS CORRETORES': 2695,
+      'GT + AVANTTI': 9203,
+      'ECCO': 11444,
+      'GARDEN ECCO': 9596,
+      'FARFALLE': 11890,
+      'MERCI': 2928,
+      'PERMUTA': 0,
+      'MONTEZ': 1549,
+      'CARDS': 9150,
+      'SALAS COMERCIAIS': 0,
+      'CASA CONSTANT': 7304,
+      'INCONF. LAGUNA': 5267,
+      'GRAN SOLARE': 7913,
+      'TREBIANO': 0,
+      'ALTA LANÇAMENTO': 0,
+      'MIND7': 0,
+    },
+    statusData: {
+      'HÁZ': 'ativa',
+      'NOVOS CORRETORES': 'ativa',
+      'GT + AVANTTI': 'ativa',
+      'ECCO': 'ativa',
+      'GARDEN ECCO': 'ativa',
+      'FARFALLE': 'ativa',
+      'MERCI': 'ativa',
+      'PERMUTA': 'inativa',
+      'MONTEZ': 'ativa',
+      'CARDS': 'ativa',
+      'SALAS COMERCIAIS': 'inativa',
+      'CASA CONSTANT': 'ativa',
+      'INCONF. LAGUNA': 'ativa',
+      'GRAN SOLARE': 'ativa',
+      'TREBIANO': 'inativa',
+      'ALTA LANÇAMENTO': 'inativa',
+      'MIND7': 'inativa',
+    },
+  },
+  '2026-05': {
+    label: 'Maio 2026',
+    short: 'Mai',
+    daysInMonth: 31,
+    DIAS_ALL: ['01/05', '02/05', '03/05', '04/05', '05/05', '06/05', '07/05', '08/05', '09/05', '10/05', '11/05', '12/05', '13/05', '14/05', '15/05', '16/05', '17/05', '18/05', '19/05', '20/05', '21/05', '22/05', '23/05', '24/05', '25/05', '26/05', '27/05', '28/05', '29/05', '30/05', '31/05'],
+    rawData: {
+      'HÁZ': [1, 1, 1, 2, 1, 0, 0, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'NOVOS CORRETORES': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GT + AVANTTI': [0, 0, 0, 6, 2, 2, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'ECCO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GARDEN ECCO': [2, 2, 2, 3, 2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'FARFALLE': [2, 2, 2, 1, 6, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'MERCI': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'PERMUTA': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'MONTEZ': [2, 1, 2, 2, 3, 1, 4, 3, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'CARDS': [2, 1, 2, 1, 0, 1, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'SALAS COMERCIAIS': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'CASA CONSTANT': [5, 4, 6, 4, 2, 3, 0, 4, 3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'INCONF. LAGUNA': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'GRAN SOLARE': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'TREBIANO': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'ALTA LANÇAMENTO': [0, 0, 0, 3, 0, 0, 0, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      'MIND7': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    },
+    investData: {
+      'HÁZ': [32.03, 24.62, 32.92, 29.32, 50.02, 26.74, 35.22, 27.87, 21.87, 38.82, 11.48, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'NOVOS CORRETORES': [21.93, 19.21, 21.81, 19.94, 19.25, 19.38, 20.07, 19.8, 19.7, 22.34, 8.93, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GT + AVANTTI': [0.0, 0.0, 0.0, 0.0, 9.26, 17.36, 15.91, 11.04, 11.89, 17.13, 6.37, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'ECCO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GARDEN ECCO': [26.57, 18.34, 25.45, 26.25, 24.08, 24.08, 24.88, 21.4, 21.84, 24.28, 10.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'FARFALLE': [63.74, 48.49, 54.5, 48.88, 69.54, 37.58, 38.53, 48.78, 55.5, 81.18, 14.45, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MERCI': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'PERMUTA': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MONTEZ': [28.76, 24.07, 30.97, 31.48, 30.03, 25.24, 36.26, 31.65, 24.09, 41.47, 18.73, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'CARDS': [31.81, 21.0, 36.24, 30.92, 35.27, 36.65, 29.36, 28.01, 18.65, 34.06, 11.47, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'SALAS COMERCIAIS': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'CASA CONSTANT': [64.54, 51.53, 72.79, 51.52, 46.21, 44.23, 38.72, 31.33, 33.32, 51.98, 47.26, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'INCONF. LAGUNA': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'GRAN SOLARE': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'TREBIANO': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'ALTA LANÇAMENTO': [0.0, 0.0, 0.0, 0.0, 23.4, 35.92, 29.54, 20.48, 20.65, 45.94, 10.96, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      'MIND7': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    },
+    cliquesData: {
+      'HÁZ': 4523,
+      'NOVOS CORRETORES': 4507,
+      'GT + AVANTTI': 2079,
+      'ECCO': 0,
+      'GARDEN ECCO': 5892,
+      'FARFALLE': 5155,
+      'MERCI': 0,
+      'PERMUTA': 0,
+      'MONTEZ': 3706,
+      'CARDS': 6004,
+      'SALAS COMERCIAIS': 0,
+      'CASA CONSTANT': 9686,
+      'INCONF. LAGUNA': 0,
+      'GRAN SOLARE': 0,
+      'TREBIANO': 0,
+      'ALTA LANÇAMENTO': 2850,
+      'MIND7': 0,
+    },
+    statusData: {
+      'HÁZ': 'ativa',
+      'NOVOS CORRETORES': 'ativa',
+      'GT + AVANTTI': 'ativa',
+      'ECCO': 'inativa',
+      'GARDEN ECCO': 'ativa',
+      'FARFALLE': 'ativa',
+      'MERCI': 'inativa',
+      'PERMUTA': 'inativa',
+      'MONTEZ': 'ativa',
+      'CARDS': 'ativa',
+      'SALAS COMERCIAIS': 'inativa',
+      'CASA CONSTANT': 'ativa',
+      'INCONF. LAGUNA': 'inativa',
+      'GRAN SOLARE': 'inativa',
+      'TREBIANO': 'inativa',
+      'ALTA LANÇAMENTO': 'ativa',
+      'MIND7': 'inativa',
+    },
+  },
+};
+// ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
+const metaLeadsMes = 500;       // meta mínima
+const metaIdealLeads = 700;     // meta ideal
+const metaInvestMes = 10000;    // orçamento mensal (sem rateio por incorporadora)
+
+// Meta de leads por produto (maio 2026)
+const metaProdutoLeads = {
+  'HÁZ':              200,
+  'MONTEZ':           200,
+  'GT + AVANTTI':      15,
+  'GARDEN ECCO':       15,
+  'FARFALLE':          15,
+  'CARDS':             15,
+  'CASA CONSTANT':     25,
+  'ALTA LANÇAMENTO':   15,
+  'ECCO':               0,
+  'MERCI':              0,
+  'PERMUTA':            0,
+  'SALAS COMERCIAIS':   0,
+  'INCONF. LAGUNA':     0,
+  'GRAN SOLARE':        0,
+  'TREBIANO':           0,
+  'MIND7':              0,
+  'NOVOS CORRETORES':   0,
+};
+const MONTH_KEYS = ['2026-01','2026-02','2026-03','2026-04','2026-05'];
+const MONTH_LABELS = {'2026-01':'Janeiro','2026-02':'Fevereiro','2026-03':'Março','2026-04':'Abril','2026-05':'Maio'};
+
+const incorporadores = {
+  'RISKALLA':      ['HÁZ','NOVOS CORRETORES'],
+  'GT BUILDING':   ['GT + AVANTTI'],
+  'PORTO CAMARGO': ['ECCO','GARDEN ECCO','FARFALLE','MERCI','PERMUTA','MONTEZ','CARDS','SALAS COMERCIAIS'],
+  'PLAENGE':       ['CASA CONSTANT'],
+  'LAGUNA':        ['INCONF. LAGUNA'],
+  'EQUILIBRIO':    ['GRAN SOLARE','TREBIANO','ALTA LANÇAMENTO'],
+  'VANGUARD':      ['MIND7'],
+};
+const CORES_INCORP = {
+  'RISKALLA':'#e11d48','GT BUILDING':'#14b8a6','PORTO CAMARGO':'#6366f1',
+  'PLAENGE':'#06b6d4','LAGUNA':'#a855f7','EQUILIBRIO':'#10b981','VANGUARD':'#f97316'
+};
+const produtos = {
+  'HÁZ':['HÁZ'],'NOVOS CORRETORES':['NOVOS CORRETORES'],
+  'GT + AVANTTI':['GT + AVANTTI'],
+  'ECCO':['ECCO'],'GARDEN ECCO':['GARDEN ECCO'],'FARFALLE':['FARFALLE'],'MERCI':['MERCI'],'PERMUTA':['PERMUTA'],
+  'MONTEZ':['MONTEZ'],'CARDS':['CARDS'],'SALAS COMERCIAIS':['SALAS COMERCIAIS'],
+  'CASA CONSTANT':['CASA CONSTANT'],
+  'INCONF. LAGUNA':['INCONF. LAGUNA'],
+  'GRAN SOLARE':['GRAN SOLARE'],'TREBIANO':['TREBIANO'],'ALTA LANÇAMENTO':['ALTA LANÇAMENTO'],
+  'MIND7':['MIND7'],
+};
+const objetivoCamp = {
+  'HÁZ':'Geração de Leads','NOVOS CORRETORES':'Tráfego',
+  'GT + AVANTTI':'Geração de Leads',
+  'ECCO':'Geração de Leads','GARDEN ECCO':'Geração de Leads','FARFALLE':'Geração de Leads',
+  'MERCI':'Geração de Leads','PERMUTA':'Geração de Leads','MONTEZ':'Geração de Leads','CARDS':'Geração de Leads',
+  'SALAS COMERCIAIS':'Geração de Leads',
+  'CASA CONSTANT':'Geração de Leads',
+  'INCONF. LAGUNA':'Geração de Leads',
+  'GRAN SOLARE':'Geração de Leads','TREBIANO':'Geração de Leads','ALTA LANÇAMENTO':'Geração de Leads',
+  'MIND7':'Geração de Leads',
+};
+const CORES_OBJ = {'Geração de Leads':'#10b981','Mensagens':'#f59e0b','Tráfego':'#3b82f6','Conversão':'#6366f1','Reconhecimento':'#ec4899'};
+const ICONE_OBJ = {'Geração de Leads':'📋','Mensagens':'💬','Tráfego':'🌐','Conversão':'🎯','Reconhecimento':'👁'};
+const CORES = {
+  // RISKALLA
+  'HÁZ':'#e11d48','NOVOS CORRETORES':'#fb7185',
+  // GT BUILDING
+  'GT + AVANTTI':'#14b8a6',
+  // PORTO CAMARGO
+  'ECCO':'#6366f1','GARDEN ECCO':'#818cf8','FARFALLE':'#a5b4fc',
+  'MERCI':'#3b82f6','PERMUTA':'#2563eb','MONTEZ':'#60a5fa','CARDS':'#0ea5e9','SALAS COMERCIAIS':'#38bdf8',
+  // PLAENGE
+  'CASA CONSTANT':'#06b6d4',
+  // LAGUNA
+  'INCONF. LAGUNA':'#a855f7',
+  // EQUILIBRIO
+  'GRAN SOLARE':'#10b981','TREBIANO':'#34d399','ALTA LANÇAMENTO':'#6ee7b7',
+  // VANGUARD
+  'MIND7':'#f97316',
+};
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let currentMonth = '2026-05';
+let DIAS_ALL, rawData, investData, cliquesData, statusData, campanhasAll;
+let filterFrom = 0, filterTo = 0, activeCamps, filterStatus = 'all';
+let currentTab = 'resumo';
+let leadsView = 'real';
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+const soma = a => a.reduce((s,v)=>s+v,0);
+const acum = a => {let s=0;return a.map(v=>(s+=v,+s.toFixed(2)));};
+const fmt = n => n.toFixed(2).replace('.',',');
+const fmtN = n => n.toLocaleString('pt-BR');
+const slice = a => a.slice(filterFrom, filterTo+1);
+const pct = (v,t) => t>0?Math.round(v/t*100):0;
+const CD = {responsive:true,maintainAspectRatio:true};
+
+function getFilteredCamps(){
+  return campanhasAll.filter(c => {
+    if(!activeCamps.has(c)) return false;
+    if(filterStatus!=='all' && statusData[c]!==filterStatus) return false;
+    return true;
+  });
+}
+function getFilteredCampsForRankings(){
+  // Exclui campanhas de Tráfego (resultado = cliques, não leads)
+  return getFilteredCamps().filter(c => objetivoCamp[c] !== 'Tráfego');
+}
+function getFilteredCampsLeads(){
+  // Exclui Tráfego de todos os resultados de leads/invest (exceto tabela detalhada)
+  return getFilteredCamps().filter(c => objetivoCamp[c] !== 'Tráfego');
+}
+function calcCPM(c){
+  const imp = (cliquesData[c]||0)/0.015;
+  const inv = soma(slice(investData[c]));
+  return imp>0 ? (inv/imp)*1000 : null;
+}
+function groupBy(camps,groupMap,dataFn){
+  const r={};
+  Object.entries(groupMap).forEach(([g,cl])=>{r[g]=cl.filter(c=>camps.includes(c)).reduce((s,c)=>s+dataFn(c),0);});
+  return r;
+}
+
+// ═══════════════════════════════════════════════════
+// MONTH SWITCHER
+// ═══════════════════════════════════════════════════
+function buildMonthBar(){
+  const bar = document.getElementById('month-bar');
+  bar.innerHTML = '';
+  MONTH_KEYS.forEach(mo => {
+    const md = MONTHS_DATA[mo];
+    const totalLeads = Object.values(md.rawData).reduce((s,arr)=>s+arr.reduce((a,b)=>a+b,0),0);
+    const totalInvest = Object.values(md.investData).reduce((s,arr)=>s+arr.reduce((a,b)=>a+b,0),0);
+    const isCurrent = mo === '2026-05';
+    const btn = document.createElement('button');
+    btn.className = 'month-btn' + (mo===currentMonth?' active':'');
+    btn.innerHTML = `${MONTH_LABELS[mo]}<span class="month-leads">${totalLeads > 0 ? totalLeads+' leads · R$'+Math.round(totalInvest).toLocaleString('pt-BR') : 'Sem dados'}</span>${isCurrent?'<span class="month-badge">Atual</span>':''}`;
+    btn.onclick = () => selectMonth(mo);
+    bar.appendChild(btn);
+  });
+}
+
+function selectMonth(mo){
+  currentMonth = mo;
+  const md = MONTHS_DATA[mo];
+  DIAS_ALL = md.DIAS_ALL;
+  rawData = md.rawData;
+  investData = md.investData;
+  cliquesData = md.cliquesData;
+  statusData = md.statusData;
+  campanhasAll = Object.keys(rawData);
+  activeCamps = new Set(campanhasAll);
+
+  // Find last day with data
+  let lastDayWithData = 0;
+  campanhasAll.forEach(c => {
+    for(let i=DIAS_ALL.length-1;i>=0;i--){
+      if(rawData[c][i]>0||investData[c][i]>0){if(i>lastDayWithData)lastDayWithData=i;break;}
+    }
+  });
+  filterFrom = 0;
+  filterTo = lastDayWithData;
+
+  // Update selects
+  const fromSel = document.getElementById('filter-date-from');
+  const toSel = document.getElementById('filter-date-to');
+  fromSel.innerHTML = '';
+  toSel.innerHTML = '';
+  DIAS_ALL.forEach((d,i) => {
+    fromSel.innerHTML += `<option value="${i}"${i===0?' selected':''}>${d}</option>`;
+    toSel.innerHTML += `<option value="${i}"${i===lastDayWithData?' selected':''}>${d}</option>`;
+  });
+
+  document.getElementById('filter-month-label').textContent = md.label;
+  buildMonthBar();
+  buildMonthlySummary();
+  buildChips();
+  applyFilters();
+}
+
+function buildMonthlySummary(){
+  const md = MONTHS_DATA[currentMonth];
+  const allCamps = Object.keys(md.rawData);
+  const n = md.DIAS_ALL.length;
+  const totL = allCamps.reduce((s,c)=>s+md.rawData[c].reduce((a,b)=>a+b,0),0);
+  const totI = allCamps.reduce((s,c)=>s+md.investData[c].reduce((a,b)=>a+b,0),0);
+  const cpl = totL>0?totI/totL:null;
+  const pctMeta = pct(totL,metaLeadsMes);
+  const activeCount = allCamps.filter(c=>md.statusData[c]==='ativa').length;
+  
+  document.getElementById('month-summary-bar').innerHTML = `
+    <div class="month-summary-item"><div class="ms-label">Mês</div><div class="ms-value">${md.label}</div><div class="ms-sub">${n} dias no mês</div></div>
+    <div class="ms-divider"></div>
+    <div class="month-summary-item"><div class="ms-label">Total Leads</div><div class="ms-value" style="color:#10b981">${fmtN(totL)}</div><div class="ms-sub">${pctMeta}% da meta</div></div>
+    <div class="ms-divider"></div>
+    <div class="month-summary-item"><div class="ms-label">Investimento</div><div class="ms-value" style="color:#f59e0b">R$${fmtN(Math.round(totI))}</div><div class="ms-sub">${pct(totI,metaInvestMes)}% do budget</div></div>
+    <div class="ms-divider"></div>
+    <div class="month-summary-item"><div class="ms-label">CPL Médio</div><div class="ms-value" style="color:${!cpl?'#64748b':cpl<10?'#10b981':cpl<20?'#f59e0b':'#ef4444'}">${cpl?'R$'+fmt(cpl):'—'}</div><div class="ms-sub">custo por lead</div></div>
+    <div class="ms-divider"></div>
+    <div class="month-summary-item"><div class="ms-label">Campanhas Ativas</div><div class="ms-value" style="color:#6366f1">${activeCount}</div><div class="ms-sub">de ${allCamps.length} totais</div></div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['resumo','financeiro','resultados'][i]===tab));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const camps = getFilteredCamps();
+  // requestAnimationFrame garante que o browser pinta o tab antes do Chart.js medir o canvas
+  requestAnimationFrame(() => {
+    if(tab==='financeiro') renderFinanceiro(camps);
+    if(tab==='resultados') renderResultados(camps);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// CHIPS
+// ═══════════════════════════════════════════════════
+function buildChips(){
+  const w = document.getElementById('camp-chips'); w.innerHTML='';
+  const all = document.createElement('button');
+  all.className='chip chip-all'; all.textContent='Todas';
+  all.onclick=()=>{activeCamps=new Set(campanhasAll);buildChips();};
+  w.appendChild(all);
+  campanhasAll.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'chip'+(activeCamps.has(c)?' active':'');
+    b.textContent = c; b.style.borderColor = CORES[c]||'#6366f1';
+    if(activeCamps.has(c)){b.style.color='#fff';b.style.backgroundColor=(CORES[c]||'#6366f1')+'33';}
+    b.onclick=()=>{if(activeCamps.has(c))activeCamps.delete(c);else activeCamps.add(c);buildChips();};
+    w.appendChild(b);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// KPIs
+// ═══════════════════════════════════════════════════
+function updateKPIs(camps){
+  const n = filterTo-filterFrom+1;
+  const leadsCamps = getFilteredCampsLeads();
+  const totL = leadsCamps.reduce((s,c)=>s+soma(slice(rawData[c])),0);
+  const totI = leadsCamps.reduce((s,c)=>s+soma(slice(investData[c])),0);
+  const cpl = totL>0?totI/totL:null;
+  document.getElementById('kpi-invest').textContent = 'R$'+fmtN(Math.round(totI));
+  document.getElementById('kpi-invest-sub').textContent = `em ${n} dia${n>1?'s':''}`;
+  document.getElementById('kpi-leads').textContent = fmtN(totL);
+  document.getElementById('kpi-leads-sub').textContent = `em ${n} dia${n>1?'s':''}`;
+  document.getElementById('kpi-cpl').textContent = cpl?'R$'+fmt(cpl):'—';
+  document.getElementById('kpi-media').textContent = (totL/n).toFixed(1);
+  document.getElementById('kpi-ticket').textContent = 'R$'+fmt(totI/n);
+  document.getElementById('header-period').textContent = `📅 ${DIAS_ALL[filterFrom]} – ${DIAS_ALL[filterTo]}/2026`;
+}
+
+// ═══════════════════════════════════════════════════
+// CHARTS - RESUMO
+// ═══════════════════════════════════════════════════
+let chartLeadsAcum=null,chartInvestAcum=null;
+
+function toggleLeadsView(v){
+  leadsView=v;
+  document.getElementById('tab-leads-real').classList.toggle('active',v==='real');
+  document.getElementById('tab-leads-camp').classList.toggle('active',v==='camp');
+  buildLeadsAcum(getFilteredCamps());
+}
+
+function buildLeadsAcum(camps){
+  if(chartLeadsAcum)chartLeadsAcum.destroy();
+  const dias = DIAS_ALL.slice(filterFrom,filterTo+1);
+  const n = dias.length;
+  const dim = MONTHS_DATA[currentMonth].daysInMonth;
+  const objDia = metaLeadsMes/dim;
+  const objAcum = dias.map((_,i)=>+((filterFrom+i+1)*objDia).toFixed(1));
+  const objIdealDia = metaIdealLeads/dim;
+  const objIdealAcum = dias.map((_,i)=>+((filterFrom+i+1)*objIdealDia).toFixed(1));
+  camps = getFilteredCampsLeads();
+  const totalReal = dias.map((_,i)=>camps.reduce((s,c)=>s+(rawData[c][filterFrom+i]||0),0));
+  const totalAcum = acum(totalReal);
+  const ult = totalAcum[totalAcum.length-1]||0;
+  const objPt = objAcum[objAcum.length-1]||1;
+  const p = pct(ult,objPt);
+  const badge = document.getElementById('leads-acum-badge');
+  const pIdeal = pct(ult, objIdealAcum[objIdealAcum.length-1]||1);
+  if(pIdeal>=100){badge.className='obj-badge obj-ahead';badge.textContent='🏆 Meta ideal atingida!';}
+  else if(p>=100){badge.className='obj-badge obj-ok';badge.textContent=`✅ Meta mín. atingida · ${pIdeal}% da ideal`;}
+  else if(p>=85){badge.className='obj-badge obj-ok';badge.textContent=`⚡ ${p}% da meta mín.`;}
+  else{badge.className='obj-badge obj-behind';badge.textContent=`⚠ ${p}% da meta mín.`;}
+  document.getElementById('leads-acum-meta').textContent=`Meta mín.: ${metaLeadsMes} · Ideal: ${metaIdealLeads} | Prop. ${n}d: ${Math.round(objPt)} | Realizado: ${ult}`;
+  let datasets;
+  if(leadsView==='real'){
+    datasets=[
+      {label:'Leads acumulados',data:totalAcum,borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.12)',fill:true,borderWidth:2.5,pointRadius:2,tension:.4},
+      {label:'Meta mínima (500)',data:objAcum,borderColor:'#f59e0b',borderDash:[5,4],borderWidth:1.8,pointRadius:0,tension:.4,backgroundColor:'transparent'},
+      {label:'Meta ideal (700)',data:objIdealAcum,borderColor:'#10b981',borderDash:[3,3],borderWidth:1.5,pointRadius:0,tension:.4,backgroundColor:'transparent'},
+    ];
+  } else {
+    datasets=camps.filter(c=>soma(rawData[c].slice(filterFrom,filterTo+1))>0).map(c=>({label:c,data:acum(dias.map((_,i)=>rawData[c][filterFrom+i]||0)),borderColor:CORES[c]||'#6366f1',backgroundColor:'transparent',borderWidth:1.6,pointRadius:1.5,tension:.35}));
+    datasets.push({label:'Objetivo',data:objAcum,borderColor:'#f59e0b',borderDash:[5,4],borderWidth:1.8,pointRadius:0,tension:.4,backgroundColor:'transparent'});
+  }
+  chartLeadsAcum=new Chart(document.getElementById('chartLeadsAcum'),{type:'line',data:{labels:dias,datasets},options:{...CD,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#94a3b8',font:{size:9}},position:'bottom'}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:16},grid:{color:'#1e2535'}},y:{ticks:{color:'#64748b'},grid:{color:'#1e2535'},min:0}}}});
+}
+
+function buildInvestAcum(camps){
+  if(chartInvestAcum)chartInvestAcum.destroy();
+  const dias = DIAS_ALL.slice(filterFrom,filterTo+1);
+  const n = dias.length;
+  const dim = MONTHS_DATA[currentMonth].daysInMonth;
+  const objDia = metaInvestMes/dim;
+  const objAcum = dias.map((_,i)=>+((filterFrom+i+1)*objDia).toFixed(2));
+  camps = getFilteredCampsLeads();
+  const totalReal = dias.map((_,i)=>camps.reduce((s,c)=>s+(investData[c][filterFrom+i]||0),0));
+  const totalAcum = acum(totalReal);
+  const ult = totalAcum[totalAcum.length-1]||0;
+  const objPt = objAcum[objAcum.length-1]||1;
+  const p = pct(ult,objPt);
+  const badge = document.getElementById('invest-acum-badge');
+  if(p>=100){badge.className='obj-badge obj-ahead';badge.textContent='✅ Acima do orçamento';}
+  else if(p>=85){badge.className='obj-badge obj-ok';badge.textContent=`⚡ ${p}% consumido`;}
+  else{badge.className='obj-badge obj-behind';badge.textContent=`⚠ ${p}% consumido`;}
+  document.getElementById('invest-acum-meta').textContent=`Budget: R$${fmtN(metaInvestMes)} | Proporcional ${n}d: R$${fmt(objPt)} | Realizado: R$${fmt(ult)}`;
+  chartInvestAcum=new Chart(document.getElementById('chartInvestAcum'),{type:'line',data:{labels:dias,datasets:[{label:'Investimento acumulado',data:totalAcum,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',fill:true,borderWidth:2.5,pointRadius:2,tension:.4},{label:'Orçamento proporcional',data:objAcum,borderColor:'#10b981',borderDash:[5,4],borderWidth:1.8,pointRadius:0,tension:.4,backgroundColor:'transparent'}]},options:{...CD,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#94a3b8',font:{size:9}},position:'bottom'}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:16},grid:{color:'#1e2535'}},y:{ticks:{color:'#64748b',callback:v=>'R$'+fmtN(Math.round(v))},grid:{color:'#1e2535'},min:0}}}});
+}
+
+// ═══════════════════════════════════════════════════
+// RANKINGS
+// ═══════════════════════════════════════════════════
+function updateRankings(camps){
+  // Rankings excluem campanhas de Tráfego (ex: Novos Corretores)
+  camps = getFilteredCampsForRankings();
+  const comL=camps.filter(c=>soma(slice(rawData[c]))>0);
+  const comI=camps.filter(c=>soma(slice(investData[c]))>0);
+  const bL=[...camps].sort((a,b)=>soma(slice(rawData[b]))-soma(slice(rawData[a])));
+  const mxL=bL.length?soma(slice(rawData[bL[0]])):1;
+  buildRankList('rank-leads',bL.slice(0,7),c=>{const v=soma(slice(rawData[c]));return{val:`${v} leads`,p:mxL>0?(v/mxL)*100:0,color:CORES[c]||'#6366f1'};});
+  const bCPL=[...comL].sort((a,b)=>soma(slice(investData[a]))/soma(slice(rawData[a]))-soma(slice(investData[b]))/soma(slice(rawData[b])));
+  const mxCPL=bCPL.length?soma(slice(investData[bCPL[bCPL.length-1]]))/soma(slice(rawData[bCPL[bCPL.length-1]])):1;
+  buildRankList('rank-cpl',bCPL.slice(0,7),c=>{const v=soma(slice(investData[c]))/soma(slice(rawData[c]));return{val:`R$${fmt(v)}`,p:Math.max(5,(1-v/mxCPL)*100),color:v<10?'#10b981':v<20?'#f59e0b':'#ef4444'};});
+  const cpmArr=comI.map(c=>({c,v:calcCPM(c)})).filter(x=>x.v>0).sort((a,b)=>a.v-b.v);
+  const mxCPM=cpmArr.length?cpmArr[cpmArr.length-1].v:1;
+  buildRankList('rank-cpm',cpmArr.slice(0,7).map(x=>x.c),c=>{const v=calcCPM(c);return{val:`R$${fmt(v)}`,p:Math.max(5,(1-v/mxCPM)*100),color:v<5?'#10b981':v<10?'#f59e0b':'#ef4444'};});
+}
+function buildRankList(id,camps,fn){
+  const w=document.getElementById(id);w.innerHTML='';
+  if(!camps.length){w.innerHTML='<div class="no-data">Sem dados</div>';return;}
+  const M=['gold','silver','bronze'];
+  camps.forEach((c,i)=>{const{val,p,color}=fn(c);w.innerHTML+=`<div class="ranking-row"><div class="ranking-pos ${i<3?M[i]:''}">${i+1}º</div><div class="ranking-bar-wrap"><div class="ranking-label" style="color:${color}">${c}</div><div class="ranking-track"><div class="ranking-fill" style="width:${p.toFixed(1)}%;background:${color}"></div></div></div><div class="ranking-val" style="color:${color}">${val}</div></div>`;});
+}
+
+// ═══════════════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════════════
+let sortCol='invest',sortDir=-1;
+function sortTable(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}document.querySelectorAll('th').forEach(t=>t.classList.remove('sorted'));document.querySelector(`th[data-col="${col}"]`)?.classList.add('sorted');updateTable(getFilteredCamps());}
+function updateTable(camps){
+  const tbody=document.getElementById('table-body');tbody.innerHTML='';
+  const n=filterTo-filterFrom+1;
+
+  const rows=camps.map(c=>{
+    const sliceLeads  = slice(rawData[c]);
+    const sliceInvest = slice(investData[c]);
+    const leads  = soma(sliceLeads);
+    const invest = soma(sliceInvest);
+
+    // CPL: leads / invest no período filtrado
+    const cpl = leads>0 && invest>0 ? invest/leads : null;
+
+    // CPM: (invest / impressões estimadas) * 1000
+    // Impressões estimadas = cliques do período / CTR médio (0.015)
+    // Cliques do período: proporcional ao peso do invest no período vs mês todo
+    const cliquesTotal = cliquesData[c]||0;
+    const investTotal  = Object.values(investData[c]).reduce((s,v)=>s+v,0);
+    const cliquesSlice = investTotal>0 ? cliquesTotal*(invest/investTotal) : 0;
+    const impressoesSlice = cliquesSlice/0.015;
+    const cpm = invest>0 && impressoesSlice>0 ? (invest/impressoesSlice)*1000 : null;
+
+    // Média/dia: leads ÷ dias com INVESTIMENTO no período (não só dias com leads)
+    const diasComInvest = sliceInvest.filter(v=>v>0).length;
+    const mediaD = diasComInvest>0 ? leads/diasComInvest : 0;
+
+    // vs Meta: % da meta mensal do produto no período proporcional
+    const metaP = metaProdutoLeads[c]||0;
+    const metaProporcional = metaP * (n / MONTHS_DATA[currentMonth].daysInMonth);
+    const metaPct = metaP>0 ? Math.round(leads/(metaProporcional||1)*100) : null;
+
+    return{c,leads,invest,cpl,cpm,mediaD,cliques:cliquesSlice,obj:objetivoCamp[c]||'Outro',metaPct};
+  });
+
+  rows.sort((a,b)=>{
+    if(sortCol==='camp')   return sortDir*(a.c>b.c?1:-1);
+    if(sortCol==='status') return sortDir*(statusData[a.c]>statusData[b.c]?1:-1);
+    if(sortCol==='obj')    return sortDir*(a.obj>b.obj?1:-1);
+    if(sortCol==='meta')   return sortDir*((a.metaPct??-1)-(b.metaPct??-1));
+    const k={invest:'invest',leads:'leads',cpl:'cpl',cpm:'cpm',media:'mediaD',cliques:'cliques'}[sortCol]||'invest';
+    return sortDir*((a[k]??999)-(b[k]??999));
+  });
+
+  let tL=0,tI=0,tC=0;
+  rows.forEach(({c,leads,invest,cpl,cpm,mediaD,cliques,obj,metaPct})=>{
+    tL+=leads; tI+=invest; tC+=cliques;
+
+    // CPL color
+    const cc=!cpl?'#64748b':cpl<10?'#10b981':cpl<20?'#f59e0b':'#ef4444';
+    const pc=cpl?Math.min(100,(cpl/80)*100):0;
+
+    // CPM color
+    const mc=!cpm?'#64748b':cpm<5?'#10b981':cpm<10?'#f59e0b':'#ef4444';
+
+    // Objetivo
+    const cor=CORES_OBJ[obj]||'#64748b';
+    const st=statusData[c];
+
+    // vs Meta cell
+    const isTrf = objetivoCamp[c]==='Tráfego';
+    let metaCell;
+    if(isTrf){
+      metaCell='<span style="color:#475569;font-size:.65rem;">Tráfego</span>';
+    } else if(metaPct===null){
+      metaCell='<span style="color:#475569;font-size:.65rem;">—</span>';
+    } else {
+      const mc2=metaPct>=100?'#10b981':metaPct>=70?'#f59e0b':'#ef4444';
+      metaCell=`<div style="display:flex;align-items:center;gap:5px;">
+        <div style="flex:1;height:4px;background:#2d3748;border-radius:2px;min-width:35px;">
+          <div style="width:${Math.min(metaPct,100)}%;height:100%;background:${mc2};border-radius:2px;"></div>
+        </div>
+        <span style="font-size:.68rem;font-weight:700;color:${mc2};">${metaPct}%</span>
+      </div>`;
+    }
+
+    tbody.innerHTML+=`<tr>
+      <td style="font-weight:600;color:${CORES[c]||'#6366f1'}">${c}</td>
+      <td><span class="badge ${st}">${st==='ativa'?'🟢 Ativa':'🔴 Inativa'}</span></td>
+      <td><span class="obj-pill" style="background:${cor}22;border:1px solid ${cor}44;color:${cor};">${ICONE_OBJ[obj]||'📌'} ${obj}</span></td>
+      <td>R$ ${fmt(invest)}</td>
+      <td>${leads}</td>
+      <td>${metaCell}</td>
+      <td><div class="cpl-bar"><span style="color:${cc};font-weight:600">${cpl?'R$'+fmt(cpl):'—'}</span><div class="cpl-track"><div class="cpl-fill" style="width:${pc}%;background:${cc}"></div></div></div></td>
+      <td style="font-weight:600;color:${mc}">${cpm?'R$'+fmt(cpm):'—'}</td>
+      <td>${mediaD>0?mediaD.toFixed(1)+'/dia':'—'}</td>
+      <td>${fmtN(Math.round(cliques))}</td>
+    </tr>`;
+  });
+
+  const cplG=tL>0?tI/tL:null;
+  document.getElementById('table-foot').innerHTML=`
+    <td colspan="3">TOTAL (${rows.length})</td>
+    <td>R$ ${fmt(tI)}</td>
+    <td>${tL}</td>
+    <td>—</td>
+    <td>${cplG?'R$'+fmt(cplG):'—'}</td>
+    <td>—</td>
+    <td>${tL>0?(tL/n).toFixed(1)+'/dia':'—'}</td>
+    <td>${fmtN(Math.round(tC))}</td>`;
+}
+
+// ═══════════════════════════════════════════════════
+// ALERTAS
+// ═══════════════════════════════════════════════════
+function buildAlerts(camps){
+  camps = getFilteredCampsLeads();
+  const totL=camps.reduce((s,c)=>s+soma(slice(rawData[c])),0);
+  const totI=camps.reduce((s,c)=>s+soma(slice(investData[c])),0);
+  const cplG=totL>0?totI/totL:null;
+  const n=filterTo-filterFrom+1;
+  const dim=MONTHS_DATA[currentMonth].daysInMonth;
+  const frac=n/dim;
+  const grupos={'CPL & Eficiência':{hdr:'hdr-warning',icon:'💡',items:[],acoes:[]},'Volume de Leads':{hdr:'hdr-info',icon:'📊',items:[],acoes:[]},'Orçamento':{hdr:'hdr-warning',icon:'💰',items:[],acoes:[]},'Atividade & Saúde':{hdr:'hdr-danger',icon:'🩺',items:[],acoes:[]},'Destaques Positivos':{hdr:'hdr-success',icon:'🏆',items:[],acoes:[]}};
+  if(cplG){
+    if(cplG<=10)grupos['Destaques Positivos'].items.push({icon:'🎉',text:`CPL geral <b>R$${fmt(cplG)}</b> — dentro da meta (≤ R$10/lead).`});
+    else if(cplG<=20){grupos['CPL & Eficiência'].items.push({icon:'⚠️',text:`CPL geral <b>R$${fmt(cplG)}</b> — acima do ideal.`});grupos['CPL & Eficiência'].acoes.push({text:'Otimizar mix de campanhas.',tag:'monitorar'});}
+    else{grupos['CPL & Eficiência'].items.push({icon:'🚨',text:`CPL elevado: <b>R$${fmt(cplG)}</b>. Meta ≤ R$10.`});grupos['CPL & Eficiência'].acoes.push({text:'Pausar campanhas com CPL > R$30.',tag:'urgente'});}
+  }
+  camps.forEach(c=>{
+    const leads=soma(slice(rawData[c]));const invest=soma(slice(investData[c]));const cpl=leads>0?invest/leads:null;
+    const rec=rawData[c].slice(Math.max(0,filterTo-2),filterTo+1);
+    if(cpl&&cpl>30){grupos['CPL & Eficiência'].items.push({icon:'🚨',text:`<b>${c}</b>: CPL <b>R$${fmt(cpl)}</b> — elevado.`});grupos['CPL & Eficiência'].acoes.push({text:`Revisar criativos de ${c}.`,tag:'urgente'});}
+    else if(cpl&&cpl<5&&leads>3){grupos['Destaques Positivos'].items.push({icon:'✅',text:`<b>${c}</b>: CPL excelente <b>R$${fmt(cpl)}</b>.`});grupos['Destaques Positivos'].acoes.push({text:`Escalar budget de ${c}.`,tag:'escalar'});}
+    if(leads>=50)grupos['Volume de Leads'].items.push({icon:'🏅',text:`<b>${c}</b>: alto volume — <b>${leads} leads</b>.`});
+    if(leads>0&&soma(rec)===0){grupos['Atividade & Saúde'].items.push({icon:'🔴',text:`<b>${c}</b> sem leads nos últimos 3 dias.`});grupos['Atividade & Saúde'].acoes.push({text:`Checar entrega de ${c}.`,tag:'urgente'});}
+    if(invest>0&&leads===0){grupos['Atividade & Saúde'].items.push({icon:'💸',text:`<b>${c}</b>: R$${fmt(invest)} investido sem leads.`});grupos['Atividade & Saúde'].acoes.push({text:`Revisar otimização de ${c}.`,tag:'urgente'});}
+  });
+  const grpEl=document.getElementById('alert-groups');grpEl.innerHTML='';
+  Object.entries(grupos).forEach(([nome,{hdr,icon,items}])=>{if(!items.length)return;const d=document.createElement('div');d.className='alert-group';d.innerHTML=`<div class="alert-group-header ${hdr}">${icon} ${nome}<span style="margin-left:auto;font-size:.6rem;opacity:.7;">${items.length} alerta${items.length>1?'s':''}</span></div><div class="alert-group-body">${items.map(it=>`<div class="alert-item"><div class="alert-item-icon">${it.icon}</div><div class="alert-item-text">${it.text}</div></div>`).join('')}</div>`;grpEl.appendChild(d);});
+  const allAcoes=Object.values(grupos).flatMap(g=>g.acoes);
+  document.getElementById('actions-list').innerHTML=allAcoes.length?allAcoes.slice(0,8).map((a,i)=>`<div class="action-item"><div class="action-num">${i+1}</div><div><div class="action-text">${a.text}</div><span class="action-tag ${a.tag}">${a.tag.toUpperCase()}</span></div></div>`).join(''):'<div class="no-data" style="padding:16px;">Nenhuma ação crítica.</div>';
+}
+
+// ═══════════════════════════════════════════════════
+// FINANCEIRO
+// ═══════════════════════════════════════════════════
+let chartFinInvest=null,chartFinProduto=null,chartFinProdutoPie=null,chartFinObjetivo=null;
+function renderFinanceiro(camps){
+  if(!rawData||!campanhasAll) return;
+  camps = getFilteredCampsLeads();
+  const n=filterTo-filterFrom+1;
+  const totI=camps.reduce((s,c)=>s+soma(slice(investData[c])),0);
+  const dim=MONTHS_DATA[currentMonth].daysInMonth;
+  const frac=n/dim;const objProp=metaInvestMes*frac;const p=pct(totI,objProp);
+  document.getElementById('fin-kpi-invest').textContent='R$'+fmtN(Math.round(totI));
+  document.getElementById('fin-kpi-invest-sub').textContent=`em ${n} dia${n>1?'s':''}`;
+  document.getElementById('fin-kpi-pct').textContent=p+'%';
+  document.getElementById('fin-kpi-ticket').textContent='R$'+fmt(totI/n);
+  if(chartFinInvest)chartFinInvest.destroy();
+  const dias=DIAS_ALL.slice(filterFrom,filterTo+1);
+  const objDia=metaInvestMes/dim;const objAcum=dias.map((_,i)=>+((filterFrom+i+1)*objDia).toFixed(2));
+  const totalReal=dias.map((_,i)=>camps.reduce((s,c)=>s+(investData[c][filterFrom+i]||0),0));
+  const totalAcum=acum(totalReal);const ult=totalAcum[totalAcum.length-1]||0;const objPt=objAcum[objAcum.length-1]||1;const pp=pct(ult,objPt);
+  const badge=document.getElementById('fin-invest-badge');
+  if(pp>=100){badge.className='obj-badge obj-ahead';badge.textContent='✅ Acima';}else if(pp>=85){badge.className='obj-badge obj-ok';badge.textContent=`⚡ ${pp}%`;}else{badge.className='obj-badge obj-behind';badge.textContent=`⚠ ${pp}%`;}
+  document.getElementById('fin-invest-meta').textContent=`Budget: R$${fmtN(metaInvestMes)} | Prop. ${n}d: R$${fmt(objPt)} | Realizado: R$${fmt(ult)}`;
+  chartFinInvest=new Chart(document.getElementById('chartFinInvest'),{type:'line',data:{labels:dias,datasets:[{label:'Investimento acumulado',data:totalAcum,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',fill:true,borderWidth:2.5,pointRadius:2,tension:.4},{label:'Orçamento proporcional',data:objAcum,borderColor:'#10b981',borderDash:[5,4],borderWidth:1.8,pointRadius:0,tension:.4,backgroundColor:'transparent'}]},options:{...CD,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#94a3b8',font:{size:9}},position:'bottom'}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:16},grid:{color:'#1e2535'}},y:{ticks:{color:'#64748b',callback:v=>'R$'+fmtN(Math.round(v))},grid:{color:'#1e2535'},min:0}}}});
+  // Incorporadores
+  const incorpInvest=groupBy(camps,incorporadores,c=>soma(slice(investData[c])));
+  const totInc=Object.values(incorpInvest).reduce((s,v)=>s+v,0);const maxInc=Math.max(...Object.values(incorpInvest),1);
+  document.getElementById('fin-incorp-bars').innerHTML='';
+  Object.entries(incorpInvest).sort((a,b)=>b[1]-a[1]).forEach(([nome,val])=>{if(val===0)return;const cor=CORES_INCORP[nome]||'#6366f1';const w=Math.max(2,(val/maxInc)*100).toFixed(1);const ps=pct(val,totInc)+'%';document.getElementById('fin-incorp-bars').innerHTML+=`<div class="group-bar-row"><div class="group-bar-label" style="color:${cor}">${nome}</div><div class="group-bar-track"><div class="group-bar-fill" style="width:${w}%;background:${cor};">${val>maxInc*.15?'R$'+fmt(val):''}</div></div><div><div class="group-bar-val" style="color:${cor}">R$${fmt(val)}</div><div class="group-bar-sub">${ps}</div></div></div>`;});
+  // Produto
+  const prodI=Object.fromEntries(Object.entries(produtos).map(([p,cs])=>[p,cs.filter(c=>camps.includes(c)).reduce((s,c)=>s+soma(slice(investData[c])),0)]));
+  const pS=Object.entries(prodI).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(chartFinProduto)chartFinProduto.destroy();
+  chartFinProduto=new Chart(document.getElementById('chartFinProduto'),{type:'bar',data:{labels:pS.map(([p])=>p),datasets:[{label:'Investimento',data:pS.map(([,v])=>v),backgroundColor:pS.map(([p])=>CORES[p]||'#6366f1'),borderRadius:5}]},options:{indexAxis:'y',...CD,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',callback:v=>'R$'+fmtN(Math.round(v))},grid:{color:'#1e2535'}},y:{ticks:{color:'#94a3b8',font:{size:9}},grid:{display:false}}}}});
+  if(chartFinProdutoPie)chartFinProdutoPie.destroy();
+  chartFinProdutoPie=new Chart(document.getElementById('chartFinProdutoPie'),{type:'doughnut',data:{labels:pS.map(([p])=>p),datasets:[{data:pS.map(([,v])=>v),backgroundColor:pS.map(([p])=>CORES[p]||'#6366f1'),borderColor:'#1a1f2e',borderWidth:2,hoverOffset:5}]},options:{...CD,cutout:'60%',plugins:{legend:{labels:{color:'#94a3b8',font:{size:9}},position:'bottom'}}}});
+  // Objetivo — usa TODAS as campanhas (inclui Tráfego)
+  const allCampsObj=getFilteredCamps();
+  const objI={};allCampsObj.forEach(c=>{const o=objetivoCamp[c]||'Outro';objI[o]=(objI[o]||0)+soma(slice(investData[c]));});
+  const oI=Object.entries(objI).sort((a,b)=>b[1]-a[1]);
+  if(chartFinObjetivo)chartFinObjetivo.destroy();
+  chartFinObjetivo=new Chart(document.getElementById('chartFinObjetivo'),{type:'bar',data:{labels:oI.map(([o])=>`${ICONE_OBJ[o]||'📌'} ${o}`),datasets:[{label:'Investimento',data:oI.map(([,v])=>v),backgroundColor:oI.map(([o])=>CORES_OBJ[o]||'#64748b'),borderRadius:6}]},options:{...CD,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8',font:{size:9}},grid:{color:'#1e2535'}},y:{ticks:{color:'#64748b',callback:v=>'R$'+fmtN(Math.round(v))},grid:{color:'#1e2535'}}}}});
+}
+
+// ═══════════════════════════════════════════════════
+// RESULTADOS
+// ═══════════════════════════════════════════════════
+let chartResLeads=null,chartResProduto=null,chartResProdutoPie=null,chartResObjetivo=null;
+function renderResultados(camps){
+  if(!rawData||!campanhasAll) return;
+  camps = getFilteredCampsLeads();
+  const n=filterTo-filterFrom+1;const totL=camps.reduce((s,c)=>s+soma(slice(rawData[c])),0);const totI=camps.reduce((s,c)=>s+soma(slice(investData[c])),0);const cplG=totL>0?totI/totL:null;
+  const dim=MONTHS_DATA[currentMonth].daysInMonth;const frac=n/dim;const p=pct(totL,metaLeadsMes*frac);
+  document.getElementById('res-kpi-leads').textContent=fmtN(totL);document.getElementById('res-kpi-leads-sub').textContent=`em ${n} dia${n>1?'s':''}`;document.getElementById('res-kpi-pct').textContent=p+'%';document.getElementById('res-kpi-cpl').textContent=cplG?'R$'+fmt(cplG):'—';
+  if(chartResLeads)chartResLeads.destroy();
+  const dias=DIAS_ALL.slice(filterFrom,filterTo+1);const objDia=metaLeadsMes/dim;const objAcum=dias.map((_,i)=>+((filterFrom+i+1)*objDia).toFixed(1));const totalReal=dias.map((_,i)=>camps.reduce((s,c)=>s+(rawData[c][filterFrom+i]||0),0));const totalAcum=acum(totalReal);const ult=totalAcum[totalAcum.length-1]||0;const objPt=objAcum[objAcum.length-1]||1;const pp=pct(ult,objPt);
+  const objIdealDiaR=metaIdealLeads/dim;
+  const objIdealAcumR=dias.map((_,i)=>+((filterFrom+i+1)*objIdealDiaR).toFixed(1));
+  const ppIdeal=pct(ult,objIdealAcumR[objIdealAcumR.length-1]||1);
+  const badge=document.getElementById('res-leads-badge');
+  if(ppIdeal>=100){badge.className='obj-badge obj-ahead';badge.textContent='🏆 Meta ideal!';}
+  else if(pp>=100){badge.className='obj-badge obj-ok';badge.textContent=`✅ Meta mín. · ${ppIdeal}% ideal`;}
+  else if(pp>=85){badge.className='obj-badge obj-ok';badge.textContent=`⚡ ${pp}% da meta mín.`;}
+  else{badge.className='obj-badge obj-behind';badge.textContent=`⚠ ${pp}% da meta mín.`;}
+  document.getElementById('res-leads-meta').textContent=`Meta mín.: ${metaLeadsMes} · Ideal: ${metaIdealLeads} | Prop. ${n}d: ${Math.round(objPt)} | Realizado: ${ult}`;
+  chartResLeads=new Chart(document.getElementById('chartResLeads'),{type:'line',data:{labels:dias,datasets:[{label:'Leads acumulados',data:totalAcum,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',fill:true,borderWidth:2.5,pointRadius:2,tension:.4},{label:'Meta mínima (500)',data:objAcum,borderColor:'#f59e0b',borderDash:[5,4],borderWidth:1.8,pointRadius:0,tension:.4,backgroundColor:'transparent'},{label:'Meta ideal (700)',data:objIdealAcumR,borderColor:'#6366f1',borderDash:[3,3],borderWidth:1.5,pointRadius:0,tension:.4,backgroundColor:'transparent'}]},options:{...CD,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#94a3b8',font:{size:9}},position:'bottom'}},scales:{x:{ticks:{color:'#64748b',font:{size:9},maxTicksLimit:16},grid:{color:'#1e2535'}},y:{ticks:{color:'#64748b'},grid:{color:'#1e2535'},min:0}}}});
+  const incorpL=groupBy(camps,incorporadores,c=>soma(slice(rawData[c])));const maxL=Math.max(...Object.values(incorpL),1);
+  document.getElementById('res-incorp-bars').innerHTML='';
+  Object.entries(incorpL).sort((a,b)=>b[1]-a[1]).forEach(([nome,val])=>{if(val===0)return;const cor=CORES_INCORP[nome]||'#6366f1';const w=Math.max(2,(val/maxL)*100).toFixed(1);const ps=pct(val,totL)+'%';const inv=groupBy(camps,incorporadores,c=>soma(slice(investData[c])))[nome]||0;const cpl=val>0?inv/val:null;document.getElementById('res-incorp-bars').innerHTML+=`<div class="group-bar-row"><div class="group-bar-label" style="color:${cor}">${nome}</div><div class="group-bar-track"><div class="group-bar-fill" style="width:${w}%;background:${cor};">${val>maxL*.15?val+' leads':''}</div></div><div><div class="group-bar-val" style="color:${cor}">${val} leads</div><div class="group-bar-sub">${ps}${cpl?` · CPL R$${fmt(cpl)}`:''}</div></div></div>`;});
+  const prodL=Object.fromEntries(Object.entries(produtos).map(([p,cs])=>[p,cs.filter(c=>camps.includes(c)).reduce((s,c)=>s+soma(slice(rawData[c])),0)]));
+  const pS=Object.entries(prodL).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(chartResProduto)chartResProduto.destroy();
+  chartResProduto=new Chart(document.getElementById('chartResProduto'),{type:'bar',data:{labels:pS.map(([p])=>p),datasets:[{label:'Leads',data:pS.map(([,v])=>v),backgroundColor:pS.map(([p])=>CORES[p]||'#6366f1'),borderRadius:5}]},options:{indexAxis:'y',...CD,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b'},grid:{color:'#1e2535'}},y:{ticks:{color:'#94a3b8',font:{size:9}},grid:{display:false}}}}});
+  if(chartResProdutoPie)chartResProdutoPie.destroy();
+  chartResProdutoPie=new Chart(document.getElementById('chartResProdutoPie'),{type:'doughnut',data:{labels:pS.map(([p])=>p),datasets:[{data:pS.map(([,v])=>v),backgroundColor:pS.map(([p])=>CORES[p]||'#6366f1'),borderColor:'#1a1f2e',borderWidth:2,hoverOffset:5}]},options:{...CD,cutout:'60%',plugins:{legend:{labels:{color:'#94a3b8',font:{size:9}},position:'bottom'}}}});
+  // Objetivo — usa TODAS as campanhas (inclui Tráfego)
+  const allCampsResObj=getFilteredCamps();
+  const objL={},objIByObj={},objClkByObj={};
+  allCampsResObj.forEach(c=>{
+    const o=objetivoCamp[c]||'Outro';
+    objL[o]=(objL[o]||0)+soma(slice(rawData[c]));
+    objIByObj[o]=(objIByObj[o]||0)+soma(slice(investData[c]));
+    if(objetivoCamp[c]==='Tráfego') objClkByObj[o]=(objClkByObj[o]||0)+(cliquesData[c]||0);
+  });
+  const oL=Object.entries(objIByObj).sort((a,b)=>b[1]-a[1]);
+  if(chartResObjetivo)chartResObjetivo.destroy();
+  chartResObjetivo=new Chart(document.getElementById('chartResObjetivo'),{type:'bar',data:{labels:oL.map(([o])=>`${ICONE_OBJ[o]||'📌'} ${o}`),datasets:[{label:'Leads / Cliques',data:oL.map(([o])=>objL[o]||objClkByObj[o]||0),backgroundColor:oL.map(([o])=>CORES_OBJ[o]||'#64748b'),borderRadius:6}]},options:{...CD,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8',font:{size:9}},grid:{color:'#1e2535'}},y:{ticks:{color:'#64748b'},grid:{color:'#1e2535'}}}}});
+  const det=document.getElementById('res-obj-detail');det.innerHTML='';
+  oL.forEach(([o])=>{
+    const cor=CORES_OBJ[o]||'#64748b';
+    const invest=objIByObj[o]||0;
+    const isTrf=o==='Tráfego';
+    const leads=objL[o]||0;
+    const cliques=objClkByObj[o]||0;
+    const resultado=isTrf?cliques:leads;
+    const cpl=!isTrf&&leads>0?invest/leads:null;
+    const cpc=isTrf&&cliques>0?invest/cliques:null;
+    const ps=isTrf?'—':pct(leads,totL)+'%';
+    const barW=isTrf?'—':ps;
+    det.innerHTML+=`<div style="background:#0f1117;border:1px solid #2d3748;border-radius:10px;padding:10px 13px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+        <span>${ICONE_OBJ[o]||'📌'}</span>
+        <span style="font-size:.73rem;font-weight:700;color:${cor};">${o}</span>
+        ${isTrf?'<span style="font-size:.58rem;background:#1e3a5f;color:#60a5fa;padding:1px 6px;border-radius:5px;margin-left:4px;">Cliques</span>':''}
+        <span style="margin-left:auto;font-size:.66rem;font-weight:700;color:${cor};">${ps}</span>
+      </div>
+      ${!isTrf?`<div style="height:3px;background:#2d3748;border-radius:2px;margin-bottom:7px;"><div style="width:${barW};height:100%;background:${cor};border-radius:2px;"></div></div>`:''}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;font-size:.66rem;color:#64748b;">
+        <div><div style="color:#94a3b8;font-weight:600;">${isTrf?'Cliques':'Leads'}</div>${resultado}</div>
+        <div><div style="color:#94a3b8;font-weight:600;">Investimento</div>R$${fmt(invest)}</div>
+        <div><div style="color:#94a3b8;font-weight:600;">${isTrf?'CPC':'CPL'}</div>${cpl?'R$'+fmt(cpl):cpc?'R$'+fmt(cpc):'—'}</div>
+      </div>
+    </div>`;
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// FILTER
+// ═══════════════════════════════════════════════════
+function updateFilterSummary(camps){const n=filterTo-filterFrom+1;const allCamps=getFilteredCamps();const trfCount=allCamps.length-camps.length;const trfNote=trfCount>0?` · ${trfCount} campanha${trfCount>1?'s':''} de Tráfego exibida${trfCount>1?'s':''} apenas na tabela`:'';document.getElementById('filter-summary').textContent=`✔ ${camps.length} campanha${camps.length!==1?'s':''} de Leads/Resultado | ${DIAS_ALL[filterFrom]} a ${DIAS_ALL[filterTo]} (${n} dia${n>1?'s':''})${trfNote}`;}
+
+function applyFilters(){
+  filterFrom=parseInt(document.getElementById('filter-date-from').value);
+  filterTo=parseInt(document.getElementById('filter-date-to').value);
+  if(filterFrom>filterTo){filterTo=filterFrom;document.getElementById('filter-date-to').value=filterFrom;}
+  filterStatus=document.getElementById('filter-status').value;
+  const camps=getFilteredCamps();           // todas (inclui Tráfego) — para tabela
+  const leadsCamps=getFilteredCampsLeads(); // sem Tráfego — para KPIs, gráficos, alertas
+  updateKPIs(leadsCamps);
+  buildLeadsAcum(leadsCamps);
+  buildInvestAcum(leadsCamps);
+  updateRankings(leadsCamps);
+  updateTable(camps);           // tabela: todas as campanhas
+  buildAlerts(leadsCamps);
+  updateFilterSummary(leadsCamps);
+  requestAnimationFrame(() => {
+    if(currentTab==='financeiro')renderFinanceiro(leadsCamps);
+    if(currentTab==='resultados')renderResultados(leadsCamps);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+buildMonthBar();
+selectMonth('2026-05');
+</script>
+</body>
+</html>
