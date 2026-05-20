@@ -1,0 +1,65 @@
+<!--
+  TEMPLATE COMPARTILHADO — Dashboard de Incorporadoras
+
+  Este arquivo é o "modelo" que todos os clientes usam.
+  Atualizações aqui são propagadas automaticamente para todos os clientes
+  após git push (GitHub Pages serve estático).
+
+  NÃO inclua dados específicos de cliente neste arquivo.
+  Dados ficam em /clientes/<nome>/data.json
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — <span id="cliente-nome">Carregando...</span></title>
+  <link rel="stylesheet" href="../template/dashboard.css">
+</head>
+<body>
+  <header class="dashboard-header">
+    <h1 id="cliente-titulo">Dashboard de Meta Ads</h1>
+    <div class="periodo" id="periodo-selector"></div>
+  </header>
+
+  <main>
+    <!-- KPIs gerais -->
+    <section id="kpis-gerais" class="kpis-row"></section>
+
+    <!-- Painel de campanhas -->
+    <section id="painel-campanhas" class="painel">
+      <h2>Campanhas</h2>
+      <div class="campanhas-header">
+        <span id="campanhas-ativas-badge"></span>
+        <span id="campanhas-inativas-badge"></span>
+      </div>
+      <div id="campanhas-grid" class="produtos-grid"></div>
+    </section>
+
+    <!-- Painel de leads por produto -->
+    <section id="painel-leads" class="painel">
+      <h2>Leads por produto</h2>
+      <div id="leads-grid"></div>
+    </section>
+
+    <!-- Painel de custo -->
+    <section id="painel-custo" class="painel">
+      <h2>Custo por lead</h2>
+      <div id="custo-grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <small>
+      Template versão <span id="template-version"></span> ·
+      Dados atualizados em <span id="data-updated"></span>
+    </small>
+  </footer>
+
+  <!-- Configs padrão (objetivoCamp default, CORES default) -->
+  <script src="../template/config.default.js"></script>
+
+  <!-- Lógica do dashboard (lê data.json e renderiza) -->
+  <script src="../template/dashboard.js"></script>
+</body>
+</html>

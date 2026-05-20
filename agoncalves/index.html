@@ -1,0 +1,70 @@
+<!--
+  Dashboard A.Gonçalves — pasta /agoncalves/
+  Protegido por senha (hash SHA-256 abaixo).
+  Para mudar a senha: abra /gerar-senha.html, gere o hash e substitua o valor abaixo.
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Identificação do cliente (usado pelo gate pra sessionStorage) -->
+  <meta name="dashboard-client-id" content="agoncalves">
+
+  <!-- SENHA do cliente. Hash SHA-256 da senha real.
+       Substitua o valor abaixo pelo hash gerado em /gerar-senha.html.
+       Hash placeholder — TROCAR antes de publicar. -->
+  <meta name="dashboard-password-hash" content="SUBSTITUA-AQUI-PELO-HASH-GERADO-EM-GERAR-SENHA-HTML">
+
+  <title>Dashboard — A.Gonçalves</title>
+
+  <!-- Gate CSS carregado primeiro pra evitar flash de conteúdo -->
+  <link rel="stylesheet" href="../template/gate.css">
+  <link rel="stylesheet" href="../template/dashboard.css">
+</head>
+<body>
+  <header class="dashboard-header">
+    <h1 id="cliente-titulo">Dashboard de Meta Ads</h1>
+    <div class="periodo" id="periodo-selector"></div>
+  </header>
+
+  <main>
+    <section id="kpis-gerais" class="kpis-row"></section>
+
+    <section id="painel-campanhas" class="painel">
+      <h2>Campanhas</h2>
+      <div class="campanhas-header">
+        <span id="campanhas-ativas-badge"></span>
+        <span id="campanhas-inativas-badge"></span>
+      </div>
+      <div id="campanhas-grid" class="produtos-grid"></div>
+    </section>
+
+    <section id="painel-leads" class="painel">
+      <h2>Leads por produto</h2>
+      <div id="leads-grid"></div>
+    </section>
+
+    <section id="painel-custo" class="painel">
+      <h2>Custo por lead</h2>
+      <div id="custo-grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <small>
+      Template versão <span id="template-version"></span> ·
+      Cliente: <span id="cliente-nome">A.Gonçalves</span> ·
+      Atualizado em <span id="data-updated"></span>
+    </small>
+  </footer>
+
+  <!-- Gate roda primeiro — esconde conteúdo até senha correta -->
+  <script src="../template/gate.js"></script>
+
+  <!-- Depois carrega configs e dashboard -->
+  <script src="../template/config.default.js"></script>
+  <script src="../template/dashboard.js"></script>
+</body>
+</html>
