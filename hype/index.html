@@ -1,70 +1,521 @@
-<!--
-  Dashboard A.Gonçalves — pasta /agoncalves/
-  Protegido por senha (hash SHA-256 abaixo).
-  Para mudar a senha: abra /gerar-senha.html, gere o hash e substitua o valor abaixo.
--->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Identificação do cliente (usado pelo gate pra sessionStorage) -->
-  <meta name="dashboard-client-id" content="hype">
-
-  <!-- SENHA do cliente. Hash SHA-256 da senha real.
-       Substitua o valor abaixo pelo hash gerado em /gerar-senha.html.
-       Hash placeholder — TROCAR antes de publicar. -->
-  <meta name="dashboard-password-hash" content="8f83ed7f08ba5b43de821855ba479b0e55dcff030f8cc8d48acaa7a8485d4f06">
-
-  <title>Dashboard — Hype Inc</title>
-
-  <!-- Gate CSS carregado primeiro pra evitar flash de conteúdo -->
-  <link rel="stylesheet" href="../template/gate.css">
-  <link rel="stylesheet" href="../template/dashboard.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Meta Ads — Hype / Hyperion</title>
+<script>
+(function(){var srcs=['https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js','https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js','https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js'];var i=0;function load(){if(i>=srcs.length)return;var s=document.createElement('script');s.src=srcs[i++];s.onerror=load;s.onload=initCharts;document.head.appendChild(s);}load();})();
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh}
+.header{background:linear-gradient(135deg,#1a1f2e,#2d1f05);padding:18px 32px;border-bottom:1px solid #f59e0b33;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.header h1{font-size:1.4rem;font-weight:700;color:#fff}
+.header h1 span{color:#f59e0b}
+.client-badge{font-size:.72rem;color:#fbbf24;background:#2d1f05;padding:3px 11px;border-radius:20px;border:1px solid #f59e0b44;margin-top:3px;display:inline-block}
+.live-badge{font-size:.65rem;color:#34d399;background:#064e3b;padding:3px 8px;border-radius:20px;border:1px solid #10b98133;display:inline-flex;align-items:center;gap:4px}
+.warn-bar{background:#2d1f05;color:#fbbf24;padding:10px 32px;border-bottom:1px solid #f59e0b44;font-size:.75rem;text-align:center}
+.container{max-width:1400px;margin:0 auto;padding:20px 24px}
+.section-title{font-size:.82rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:#2d3748}
+.section-title:first-child{margin-top:0}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:18px}
+.kpi{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:15px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.kpi.green::before{background:linear-gradient(90deg,#10b981,#34d399)}
+.kpi.blue::before{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.kpi.red::before{background:linear-gradient(90deg,#ef4444,#f87171)}
+.kpi .label{font-size:.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.kpi .value{font-size:1.55rem;font-weight:700;color:#fff;line-height:1}
+.kpi .sub{font-size:.65rem;color:#64748b;margin-top:3px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.card{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:16px}
+.card h3{font-size:.81rem;font-weight:600;color:#cbd5e1;margin-bottom:11px}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:18px}
+.prod-card{background:#1a1f2e;border:1px solid #2d3748;border-radius:14px;padding:14px}
+.prod-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.prod-name{font-size:.85rem;font-weight:700}
+.prod-share{font-size:.7rem;color:#64748b;font-weight:600}
+.prod-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.kpi-l{font-size:.55rem;color:#64748b;text-transform:uppercase;margin-bottom:2px}
+.kpi-v{font-size:.95rem;font-weight:700;color:#fff}
+.prod-bar{height:4px;background:#2d3748;border-radius:2px;overflow:hidden}
+.prod-bar-fill{height:100%;border-radius:2px}
+table{width:100%;border-collapse:collapse;font-size:.76rem}
+thead tr{background:#252b3b}
+th{padding:8px 11px;text-align:left;color:#94a3b8;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em}
+td{padding:7px 11px;border-bottom:1px solid #1e2535}
+tr:hover td{background:#1e2535}
+.badge{display:inline-block;padding:2px 7px;border-radius:9px;font-size:.63rem;font-weight:600}
+.badge.ativa{background:#064e3b;color:#34d399}
+.badge.inativa{background:#450a0a;color:#f87171}
+.pill{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.62rem;font-weight:600}
+.alerts-layout{display:grid;grid-template-columns:1fr 320px;gap:14px}
+.alert-list{background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;overflow:hidden}
+.alert-list-header{padding:10px 14px;background:#2d1f05;color:#fbbf24;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #f59e0b44}
+.alert-item{padding:9px 14px;border-bottom:1px solid #1e2535;font-size:.74rem;display:flex;gap:8px;align-items:flex-start}
+.alert-item:last-child{border-bottom:none}
+.actions-panel{background:#1a1f2e;border:1px solid #f59e0b;border-radius:12px;overflow:hidden;align-self:start}
+.actions-panel-header{padding:10px 14px;background:linear-gradient(90deg,#f59e0b22,#fbbf2411);color:#fbbf24;font-size:.7rem;font-weight:700;text-transform:uppercase;border-bottom:1px solid #f59e0b44}
+.action-item{padding:10px 14px;border-bottom:1px solid #1e2535;display:flex;gap:10px;align-items:flex-start}
+.action-num{background:#f59e0b;color:#0f1117;font-size:.6rem;font-weight:700;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.action-tag{display:inline-block;padding:1px 6px;border-radius:5px;font-size:.55rem;font-weight:700;margin-top:3px}
+.action-tag.urgente{background:#450a0a;color:#f87171}
+.action-tag.escalar{background:#052d1a;color:#34d399}
+.muted{padding:14px;color:#64748b;font-size:.75rem;text-align:center}
+.note{font-size:.7rem;color:#94a3b8;background:#1a1f2e;border:1px dashed #2d3748;border-radius:8px;padding:12px 14px;margin-bottom:14px}
+.note b{color:#fbbf24}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.grid-2,.alerts-layout{grid-template-columns:1fr}}
+@media(max-width:600px){.kpis{grid-template-columns:1fr}.prod-kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
 </head>
 <body>
-  <header class="dashboard-header">
-    <h1 id="cliente-titulo">Dashboard de Meta Ads</h1>
-    <div class="periodo" id="periodo-selector"></div>
-  </header>
+<div class="header">
+  <div>
+    <h1>🏛️ Dashboard <span>Meta Ads</span></h1>
+    <div style="display:flex;align-items:center;gap:7px;margin-top:4px;flex-wrap:wrap">
+      <span class="client-badge">🟡 Hype Inc · Hyperion</span>
+      <span class="live-badge"><span style="width:5px;height:5px;border-radius:50%;background:#10b981;display:inline-block"></span>Relatório Maio/2026 · 21 dias</span>
+    </div>
+  </div>
+  <div style="text-align:right">
+    <div style="font-size:.78rem;color:#fbbf24;background:#2d1f05;padding:4px 12px;border-radius:20px;border:1px solid #f59e0b44">📅 01/05/2026 → 21/05/2026</div>
+    <div style="font-size:.65rem;color:#64748b;margin-top:4px">10 produtos detectados · ⭐ CTBA GERAL em destaque</div>
+  </div>
+</div>
 
-  <main>
-    <section id="kpis-gerais" class="kpis-row"></section>
+<div class="warn-bar">⚠️ <b>Versão preliminar (v0)</b> — gerada a partir de export <b>nível Conjunto de Anúncios</b> (não Campanha). Sem histórico anterior a maio/2026. Re-exportar do Meta com Nível: Campanha + Por Tempo: Mês para versão completa.</div>
 
-    <section id="painel-campanhas" class="painel">
-      <h2>Campanhas</h2>
-      <div class="campanhas-header">
-        <span id="campanhas-ativas-badge"></span>
-        <span id="campanhas-inativas-badge"></span>
+<div class="container">
+
+  <div class="section-title">📊 KPIs do período</div>
+  <div class="kpis">
+    <div class="kpi"><div class="label">Total Investido</div><div class="value">R$ 17,230</div><div class="sub">em 21 dias</div></div>
+    <div class="kpi green"><div class="label">Total de Leads</div><div class="value">519</div><div class="sub">excluindo Alcance</div></div>
+    <div class="kpi red"><div class="label">CPL Geral</div><div class="value">R$ 33.20</div><div class="sub">acima do ideal (R$20)</div></div>
+    <div class="kpi blue"><div class="label">Média Leads/Dia</div><div class="value">24.7</div><div class="sub">21 dias</div></div>
+    <div class="kpi"><div class="label">Ticket Diário</div><div class="value">R$ 820</div><div class="sub">investido/dia</div></div>
+  </div>
+
+  <div class="note">
+    📌 <b>Como ler estes números</b>: o gasto inclui todos os 2898 ad sets do período (mesmo os que só geraram alcance/impressões). 
+    Os <b>26 ad sets com leads reais</b> consumiram R$ 15,606.01; o restante (R$ 1,623.66) foi em ad sets sem conversão registrada — vale revisar.
+  </div>
+
+  <div class="section-title">📦 Produtos / Agrupamentos</div>
+  <div class="prod-grid">
+      <div class="prod-card" style="border-top:3px solid #f59e0b">
+        <div class="prod-header">
+          <span class="prod-name" style="color:#f59e0b">⭐ CTBA GERAL</span>
+          <span class="prod-share">62.8%</span>
+        </div>
+        <div class="prod-kpis">
+          <div><div class="kpi-l">Leads</div><div class="kpi-v" style="color:#f59e0b">326</div></div>
+          <div><div class="kpi-l">Gasto</div><div class="kpi-v">R$ 4.109</div></div>
+          <div><div class="kpi-l">CPL</div><div class="kpi-v" style="color:#f59e0b">R$ 12.60</div></div>
+          <div><div class="kpi-l">Ad sets</div><div class="kpi-v">9 <span style="color:#64748b;font-size:.6rem">(8A/1I)</span></div></div>
+        </div>
+        <div class="prod-bar"><div class="prod-bar-fill" style="width:62.813102119460495%;background:#f59e0b"></div></div>
       </div>
-      <div id="campanhas-grid" class="produtos-grid"></div>
-    </section>
+      <div class="prod-card" style="border-top:3px solid #ef4444">
+        <div class="prod-header">
+          <span class="prod-name" style="color:#ef4444">RETARGETING</span>
+          <span class="prod-share">14.8%</span>
+        </div>
+        <div class="prod-kpis">
+          <div><div class="kpi-l">Leads</div><div class="kpi-v" style="color:#ef4444">77</div></div>
+          <div><div class="kpi-l">Gasto</div><div class="kpi-v">R$ 624</div></div>
+          <div><div class="kpi-l">CPL</div><div class="kpi-v" style="color:#10b981">R$ 8.10</div></div>
+          <div><div class="kpi-l">Ad sets</div><div class="kpi-v">1 <span style="color:#64748b;font-size:.6rem">(1A/0I)</span></div></div>
+        </div>
+        <div class="prod-bar"><div class="prod-bar-fill" style="width:14.836223506743737%;background:#ef4444"></div></div>
+      </div>
+      <div class="prod-card" style="border-top:3px solid #fbbf24">
+        <div class="prod-header">
+          <span class="prod-name" style="color:#fbbf24">PC AUDIENCES</span>
+          <span class="prod-share">8.7%</span>
+        </div>
+        <div class="prod-kpis">
+          <div><div class="kpi-l">Leads</div><div class="kpi-v" style="color:#fbbf24">45</div></div>
+          <div><div class="kpi-l">Gasto</div><div class="kpi-v">R$ 9.477</div></div>
+          <div><div class="kpi-l">CPL</div><div class="kpi-v" style="color:#ef4444">R$ 210.61</div></div>
+          <div><div class="kpi-l">Ad sets</div><div class="kpi-v">9 <span style="color:#64748b;font-size:.6rem">(7A/2I)</span></div></div>
+        </div>
+        <div class="prod-bar"><div class="prod-bar-fill" style="width:8.670520231213873%;background:#fbbf24"></div></div>
+      </div>
+      <div class="prod-card" style="border-top:3px solid #a78bfa">
+        <div class="prod-header">
+          <span class="prod-name" style="color:#a78bfa">HIGH</span>
+          <span class="prod-share">7.7%</span>
+        </div>
+        <div class="prod-kpis">
+          <div><div class="kpi-l">Leads</div><div class="kpi-v" style="color:#a78bfa">40</div></div>
+          <div><div class="kpi-l">Gasto</div><div class="kpi-v">R$ 526</div></div>
+          <div><div class="kpi-l">CPL</div><div class="kpi-v" style="color:#f59e0b">R$ 13.15</div></div>
+          <div><div class="kpi-l">Ad sets</div><div class="kpi-v">1 <span style="color:#64748b;font-size:.6rem">(1A/0I)</span></div></div>
+        </div>
+        <div class="prod-bar"><div class="prod-bar-fill" style="width:7.7071290944123305%;background:#a78bfa"></div></div>
+      </div>
+      <div class="prod-card" style="border-top:3px solid #10b981">
+        <div class="prod-header">
+          <span class="prod-name" style="color:#10b981">BOSQUE</span>
+          <span class="prod-share">3.5%</span>
+        </div>
+        <div class="prod-kpis">
+          <div><div class="kpi-l">Leads</div><div class="kpi-v" style="color:#10b981">18</div></div>
+          <div><div class="kpi-l">Gasto</div><div class="kpi-v">R$ 562</div></div>
+          <div><div class="kpi-l">CPL</div><div class="kpi-v" style="color:#ef4444">R$ 31.21</div></div>
+          <div><div class="kpi-l">Ad sets</div><div class="kpi-v">1 <span style="color:#64748b;font-size:.6rem">(0A/1I)</span></div></div>
+        </div>
+        <div class="prod-bar"><div class="prod-bar-fill" style="width:3.4682080924855487%;background:#10b981"></div></div>
+      </div>
+      <div class="prod-card" style="border-top:3px solid #3b82f6">
+        <div class="prod-header">
+          <span class="prod-name" style="color:#3b82f6">INVESTIDOR</span>
+          <span class="prod-share">1.2%</span>
+        </div>
+        <div class="prod-kpis">
+          <div><div class="kpi-l">Leads</div><div class="kpi-v" style="color:#3b82f6">6</div></div>
+          <div><div class="kpi-l">Gasto</div><div class="kpi-v">R$ 129</div></div>
+          <div><div class="kpi-l">CPL</div><div class="kpi-v" style="color:#ef4444">R$ 21.49</div></div>
+          <div><div class="kpi-l">Ad sets</div><div class="kpi-v">1 <span style="color:#64748b;font-size:.6rem">(1A/0I)</span></div></div>
+        </div>
+        <div class="prod-bar"><div class="prod-bar-fill" style="width:1.1560693641618496%;background:#3b82f6"></div></div>
+      </div>
+      <div class="prod-card" style="border-top:3px solid #8b5cf6">
+        <div class="prod-header">
+          <span class="prod-name" style="color:#8b5cf6">ALTO PADRÃO</span>
+          <span class="prod-share">0.6%</span>
+        </div>
+        <div class="prod-kpis">
+          <div><div class="kpi-l">Leads</div><div class="kpi-v" style="color:#8b5cf6">3</div></div>
+          <div><div class="kpi-l">Gasto</div><div class="kpi-v">R$ 46</div></div>
+          <div><div class="kpi-l">CPL</div><div class="kpi-v" style="color:#f59e0b">R$ 15.30</div></div>
+          <div><div class="kpi-l">Ad sets</div><div class="kpi-v">1 <span style="color:#64748b;font-size:.6rem">(0A/1I)</span></div></div>
+        </div>
+        <div class="prod-bar"><div class="prod-bar-fill" style="width:0.5780346820809248%;background:#8b5cf6"></div></div>
+      </div>
+      <div class="prod-card" style="border-top:3px solid #34d399">
+        <div class="prod-header">
+          <span class="prod-name" style="color:#34d399">GARDENS</span>
+          <span class="prod-share">0.4%</span>
+        </div>
+        <div class="prod-kpis">
+          <div><div class="kpi-l">Leads</div><div class="kpi-v" style="color:#34d399">2</div></div>
+          <div><div class="kpi-l">Gasto</div><div class="kpi-v">R$ 22</div></div>
+          <div><div class="kpi-l">CPL</div><div class="kpi-v" style="color:#f59e0b">R$ 11.04</div></div>
+          <div><div class="kpi-l">Ad sets</div><div class="kpi-v">1 <span style="color:#64748b;font-size:.6rem">(1A/0I)</span></div></div>
+        </div>
+        <div class="prod-bar"><div class="prod-bar-fill" style="width:0.3853564547206166%;background:#34d399"></div></div>
+      </div>
+      <div class="prod-card" style="border-top:3px solid #64748b">
+        <div class="prod-header">
+          <span class="prod-name" style="color:#64748b">OUTRAS CIDADES</span>
+          <span class="prod-share">0.2%</span>
+        </div>
+        <div class="prod-kpis">
+          <div><div class="kpi-l">Leads</div><div class="kpi-v" style="color:#64748b">1</div></div>
+          <div><div class="kpi-l">Gasto</div><div class="kpi-v">R$ 68</div></div>
+          <div><div class="kpi-l">CPL</div><div class="kpi-v" style="color:#ef4444">R$ 68.47</div></div>
+          <div><div class="kpi-l">Ad sets</div><div class="kpi-v">1 <span style="color:#64748b;font-size:.6rem">(0A/1I)</span></div></div>
+        </div>
+        <div class="prod-bar"><div class="prod-bar-fill" style="width:0.1926782273603083%;background:#64748b"></div></div>
+      </div>
+      <div class="prod-card" style="border-top:3px solid #ec4899">
+        <div class="prod-header">
+          <span class="prod-name" style="color:#ec4899">ARTHAUS</span>
+          <span class="prod-share">0.2%</span>
+        </div>
+        <div class="prod-kpis">
+          <div><div class="kpi-l">Leads</div><div class="kpi-v" style="color:#ec4899">1</div></div>
+          <div><div class="kpi-l">Gasto</div><div class="kpi-v">R$ 43</div></div>
+          <div><div class="kpi-l">CPL</div><div class="kpi-v" style="color:#ef4444">R$ 43.06</div></div>
+          <div><div class="kpi-l">Ad sets</div><div class="kpi-v">1 <span style="color:#64748b;font-size:.6rem">(0A/1I)</span></div></div>
+        </div>
+        <div class="prod-bar"><div class="prod-bar-fill" style="width:0.1926782273603083%;background:#ec4899"></div></div>
+      </div>
+  </div>
 
-    <section id="painel-leads" class="painel">
-      <h2>Leads por produto</h2>
-      <div id="leads-grid"></div>
-    </section>
+  <div class="section-title">📈 Distribuição visual</div>
+  <div class="grid-2">
+    <div class="card"><h3>🎯 Leads por Produto</h3><canvas id="cLeads" style="max-height:260px"></canvas></div>
+    <div class="card"><h3>💰 Investimento por Produto</h3><canvas id="cSpend" style="max-height:260px"></canvas></div>
+  </div>
 
-    <section id="painel-custo" class="painel">
-      <h2>Custo por lead</h2>
-      <div id="custo-grid"></div>
-    </section>
-  </main>
+  <div class="section-title">📋 Detalhamento dos 26 Ad Sets com leads</div>
+  <div class="card" style="margin-bottom:18px">
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Conjunto de Anúncios</th><th>Grupo</th><th>Status</th><th>Leads</th><th>Gasto</th><th>CPL</th><th>Cliques</th>
+        </tr></thead>
+        <tbody>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[CTBA] [CASA] [muito segmentado]</td>
+        <td><span class="pill" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44">CTBA GERAL</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>87</td>
+        <td>R$ 517.75</td>
+        <td style="color:#10b981;font-weight:600">R$ 5.95</td>
+        <td>301</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">retargeting_geral</td>
+        <td><span class="pill" style="background:#ef444422;color:#ef4444;border:1px solid #ef444444">RETARGETING</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>77</td>
+        <td>R$ 623.91</td>
+        <td style="color:#10b981;font-weight:600">R$ 8.10</td>
+        <td>200</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[CTBA + PINHAIS] [AMPLO]</td>
+        <td><span class="pill" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44">CTBA GERAL</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>59</td>
+        <td>R$ 273.59</td>
+        <td style="color:#10b981;font-weight:600">R$ 4.64</td>
+        <td>180</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[CTBA ABERTO IMOB]</td>
+        <td><span class="pill" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44">CTBA GERAL</span></td>
+        <td><span class="badge inativa">🔴 Inativa</span></td>
+        <td>50</td>
+        <td>R$ 1055.60</td>
+        <td style="color:#ef4444;font-weight:600">R$ 21.11</td>
+        <td>398</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[CTBA] [FOGUETINHOS] [AMPLO]</td>
+        <td><span class="pill" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44">CTBA GERAL</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>44</td>
+        <td>R$ 570.82</td>
+        <td style="color:#f59e0b;font-weight:600">R$ 12.97</td>
+        <td>124</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[CTBA] [HIGH] [3 QUARTOS] [AMPLO]</td>
+        <td><span class="pill" style="background:#a78bfa22;color:#a78bfa;border:1px solid #a78bfa44">HIGH</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>40</td>
+        <td>R$ 525.83</td>
+        <td style="color:#f59e0b;font-weight:600">R$ 13.15</td>
+        <td>249</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[CTA IMOB] [AMPLO]</td>
+        <td><span class="pill" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44">CTBA GERAL</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>38</td>
+        <td>R$ 407.55</td>
+        <td style="color:#f59e0b;font-weight:600">R$ 10.72</td>
+        <td>90</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[GERAL CTBA TOP]</td>
+        <td><span class="pill" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44">CTBA GERAL</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>22</td>
+        <td>R$ 369.86</td>
+        <td style="color:#f59e0b;font-weight:600">R$ 16.81</td>
+        <td>95</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[ctba] [videos] [bosque] [AMPLO]</td>
+        <td><span class="pill" style="background:#10b98122;color:#10b981;border:1px solid #10b98144">BOSQUE</span></td>
+        <td><span class="badge inativa">🔴 Inativa</span></td>
+        <td>18</td>
+        <td>R$ 561.84</td>
+        <td style="color:#ef4444;font-weight:600">R$ 31.21</td>
+        <td>116</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[CTBA] [CARDS LUCAS BR]  [212K SEGMENTADO]</td>
+        <td><span class="pill" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44">CTBA GERAL</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>15</td>
+        <td>R$ 844.61</td>
+        <td style="color:#ef4444;font-weight:600">R$ 56.31</td>
+        <td>202</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[PC] - [FB+IG-FEED+STORIES] - [ all ] - PC: ADV</td>
+        <td><span class="pill" style="background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444">PC AUDIENCES</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>13</td>
+        <td>R$ 1217.90</td>
+        <td style="color:#ef4444;font-weight:600">R$ 93.68</td>
+        <td>133</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[PC] - [FB+IG-FEED+STORIES] - [ all ] - PC: Cargos</td>
+        <td><span class="pill" style="background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444">PC AUDIENCES</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>9</td>
+        <td>R$ 2412.51</td>
+        <td style="color:#ef4444;font-weight:600">R$ 268.06</td>
+        <td>242</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[PC] - [FB+IG-FEED+STORIES] - [ all ] - PC: ADV + A.P</td>
+        <td><span class="pill" style="background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444">PC AUDIENCES</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>8</td>
+        <td>R$ 1391.74</td>
+        <td style="color:#ef4444;font-weight:600">R$ 173.97</td>
+        <td>248</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[ctba] [mot e card] [std] [AMPLO]</td>
+        <td><span class="pill" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44">CTBA GERAL</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>6</td>
+        <td>R$ 28.80</td>
+        <td style="color:#10b981;font-weight:600">R$ 4.80</td>
+        <td>10</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">interesses_investimento-imobiliario</td>
+        <td><span class="pill" style="background:#3b82f622;color:#3b82f6;border:1px solid #3b82f644">INVESTIDOR</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>6</td>
+        <td>R$ 128.94</td>
+        <td style="color:#ef4444;font-weight:600">R$ 21.49</td>
+        <td>30</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[CTBA] [HIPERLAPSE] [AMPLO]</td>
+        <td><span class="pill" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44">CTBA GERAL</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>5</td>
+        <td>R$ 40.01</td>
+        <td style="color:#10b981;font-weight:600">R$ 8.00</td>
+        <td>14</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[PC] - [FB+IG-FEED+STORIES] - [ all ] - PC: ADV + Interesses</td>
+        <td><span class="pill" style="background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444">PC AUDIENCES</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>4</td>
+        <td>R$ 897.75</td>
+        <td style="color:#ef4444;font-weight:600">R$ 224.44</td>
+        <td>64</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[PC] - [FB+IG-FEED+STORIES] - [ all ] - PC: ADV + A.P</td>
+        <td><span class="pill" style="background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444">PC AUDIENCES</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>4</td>
+        <td>R$ 1696.04</td>
+        <td style="color:#ef4444;font-weight:600">R$ 424.01</td>
+        <td>139</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[GASPAR] Alto Padrão Luxo 35+</td>
+        <td><span class="pill" style="background:#8b5cf622;color:#8b5cf6;border:1px solid #8b5cf644">ALTO PADRÃO</span></td>
+        <td><span class="badge inativa">🔴 Inativa</span></td>
+        <td>3</td>
+        <td>R$ 45.90</td>
+        <td style="color:#f59e0b;font-weight:600">R$ 15.30</td>
+        <td>185</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[PC] - [FB+IG-FEED+STORIES] - [ all ] - PC: A.P + ADV</td>
+        <td><span class="pill" style="background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444">PC AUDIENCES</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>3</td>
+        <td>R$ 607.06</td>
+        <td style="color:#ef4444;font-weight:600">R$ 202.35</td>
+        <td>20</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[ctba] [mot e card] [gardens] [AMPLO]</td>
+        <td><span class="pill" style="background:#34d39922;color:#34d399;border:1px solid #34d39944">GARDENS</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>2</td>
+        <td>R$ 22.07</td>
+        <td style="color:#f59e0b;font-weight:600">R$ 11.04</td>
+        <td>6</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[PC] - [FB+IG-FEED+STORIES] - [ all ] - PC: Investimento Imobiliário</td>
+        <td><span class="pill" style="background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444">PC AUDIENCES</span></td>
+        <td><span class="badge inativa">🔴 Inativa</span></td>
+        <td>2</td>
+        <td>R$ 655.52</td>
+        <td style="color:#ef4444;font-weight:600">R$ 327.76</td>
+        <td>38</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[VINICIUS] FOZ DO IGUAÇU</td>
+        <td><span class="pill" style="background:#64748b22;color:#64748b;border:1px solid #64748b44">OUTRAS CIDADES</span></td>
+        <td><span class="badge inativa">🔴 Inativa</span></td>
+        <td>1</td>
+        <td>R$ 68.47</td>
+        <td style="color:#ef4444;font-weight:600">R$ 68.47</td>
+        <td>123</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[VINICIUS] POA ARTHAUS Cadastro para Whats FELICITÁ 3D</td>
+        <td><span class="pill" style="background:#ec489922;color:#ec4899;border:1px solid #ec489944">ARTHAUS</span></td>
+        <td><span class="badge inativa">🔴 Inativa</span></td>
+        <td>1</td>
+        <td>R$ 43.06</td>
+        <td style="color:#ef4444;font-weight:600">R$ 43.06</td>
+        <td>27</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[PC] - [FB+IG-FEED+STORIES] - [ all ] - PC: Interesses + A.P</td>
+        <td><span class="pill" style="background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444">PC AUDIENCES</span></td>
+        <td><span class="badge ativa">🟢 Ativa</span></td>
+        <td>1</td>
+        <td>R$ 293.27</td>
+        <td style="color:#ef4444;font-weight:600">R$ 293.27</td>
+        <td>63</td>
+      </tr>
+      <tr>
+        <td style="max-width:340px;color:#cbd5e1;font-size:.72rem">[PC] - [FB+IG-FEED+STORIES] - [ all ] - PC: Empresário</td>
+        <td><span class="pill" style="background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444">PC AUDIENCES</span></td>
+        <td><span class="badge inativa">🔴 Inativa</span></td>
+        <td>1</td>
+        <td>R$ 305.61</td>
+        <td style="color:#ef4444;font-weight:600">R$ 305.61</td>
+        <td>7</td>
+      </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-  <footer>
-    <small>
-      Template versão <span id="template-version"></span> ·
-      Cliente: <span id="cliente-nome">Hype Inc</span> ·
-      Atualizado em <span id="data-updated"></span>
-    </small>
-  </footer>
+  <div class="section-title">⚡ Alertas & Ações Recomendadas</div>
+  <div class="alerts-layout" style="margin-bottom:30px">
+    <div class="alert-list">
+      <div class="alert-list-header">🔔 Alertas Executivos</div>
+      <div class="alert-item"><span>🚨</span><div>CPL geral <b>R$33.20</b> está elevado.</div></div><div class="alert-item"><span>🏆</span><div><b>RETARGETING</b>: CPL <b>R$8.10</b> com <b>77 leads</b> — escalar.</div></div><div class="alert-item"><span>🚨</span><div><b>PC AUDIENCES</b>: CPL <b>R$210.61</b> — muito acima do aceitável.</div></div><div class="alert-item"><span>🚨</span><div><b>OUTRAS CIDADES</b>: CPL <b>R$68.47</b> — muito acima do aceitável.</div></div>
+    </div>
+    <div class="actions-panel">
+      <div class="actions-panel-header">⚡ Ações Recomendadas</div>
+      <div class="action-item"><div class="action-num">1</div><div><div>Pausar PC AUDIENCES (CPL R$210,61) ou revisar criativos.</div><span class="action-tag urgente">URGENTE</span></div></div><div class="action-item"><div class="action-num">2</div><div><div>Aumentar budget de RETARGETING.</div><span class="action-tag escalar">ESCALAR</span></div></div>
+    </div>
+  </div>
 
-  <!-- Gate roda primeiro — esconde conteúdo até senha correta -->
-  <script src="../template/gate.js"></script>
+  <div style="text-align:center;color:#475569;font-size:.65rem;margin:30px 0 10px">
+    Gerado em 21/05/2026 19:16 · Fonte: Hyperion-Conjuntos-de-anúncios-1-21-mai-2026.xlsx · 19 ad sets ativos / 7 inativos com leads
+  </div>
+</div>
 
-  <!-- Depois carrega configs e dashboard -->
-  <script src="../template/config.default.js"></script>
-  <script src="../template/dashboard.js"></script>
+<script>
+const LABELS = ["CTBA GERAL", "RETARGETING", "PC AUDIENCES", "HIGH", "BOSQUE", "INVESTIDOR", "ALTO PADRÃO", "GARDENS", "OUTRAS CIDADES", "ARTHAUS"];
+const LEADS = [326, 77, 45, 40, 18, 6, 3, 2, 1, 1];
+const SPEND = [4108.59, 623.91, 9477.4, 525.83, 561.84, 128.94, 45.9, 22.07, 68.47, 43.06];
+const COLORS = ["#f59e0b", "#ef4444", "#fbbf24", "#a78bfa", "#10b981", "#3b82f6", "#8b5cf6", "#34d399", "#64748b", "#ec4899"];
+function initCharts(){
+  new Chart(document.getElementById('cLeads'),{type:'doughnut',data:{labels:LABELS,datasets:[{data:LEADS,backgroundColor:COLORS,borderColor:'#1a1f2e',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}},position:'right'}}}});
+  new Chart(document.getElementById('cSpend'),{type:'bar',data:{labels:LABELS,datasets:[{label:'Investimento (R$)',data:SPEND,backgroundColor:COLORS,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'#1e2535'}},y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{display:false}}}}});
+}
+</script>
 </body>
 </html>

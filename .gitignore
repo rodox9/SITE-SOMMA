@@ -2,3 +2,9 @@
 **/.DS_Store
 **/.fuse_hidden*
 node_modules/
+
+# Dados de clientes (CSVs/XLSX exportados do Meta) — não versionar
+csv-input/*
+csv-archive/*
+!csv-input/.gitkeep
+!csv-archive/.gitkeep
